@@ -119,6 +119,9 @@ function resolveBuildEnv() {
   if (!env.TAURI_SIGNING_PRIVATE_KEY && fs.existsSync(keyFile)) {
     env.TAURI_SIGNING_PRIVATE_KEY = fs.readFileSync(keyFile, "utf8").trim();
   }
+  if (env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD === undefined) {
+    env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "";
+  }
 
   // Locate WinLibs MinGW-w64 if present on Windows
   if (process.platform === "win32") {
@@ -437,6 +440,7 @@ async function main() {
     runCmd(
       "git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/gen/android/app/build.gradle.kts CHANGELOG.md README.md scripts/release.js"
     );
+    runCmd("git add -f dist-release/latest.json");
     runCmd(`git commit -m "chore(release): ${next.tag}"`);
     runCmd(`git tag -a ${next.tag} -m "Release ${next.tag}"`);
     runCmd("git push origin HEAD --follow-tags");

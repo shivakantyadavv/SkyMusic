@@ -2,6 +2,14 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.3] - 2026-11-27
+
+### What's New
+- India & Pakistan Top Charts (Top 100 India, Hot Hits Pakistan, Bollywood, Coke Studio & Sufi, Punjabi, 90s Classics) with dynamic Daily Mix rotation
+- Spotify-style Playlist numbered song tables & Album detail pages
+- Verified Artist Profiles (Arijit Singh, Vishal Mishra, Sonu Nigam, Atif Aslam, Diljit Dosanjh & more)
+- Full Android TV / Google TV support with Leanback banner, D-Pad navigation, Voice Search, Media Keys & Foreground MediaSession
+
 ## [v1.2] - 2026-11-27
 
 ### What's New
