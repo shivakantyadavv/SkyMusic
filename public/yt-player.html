@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Skymusic Audio Bridge</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 240px;
+        height: 240px;
+        overflow: hidden;
+        background: #000;
+      }
+      #yt-player {
+        width: 240px;
+        height: 240px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="yt-player"></div>
+    <script>
+      var player = null;
+      var playerReady = false;
+      var pendingLoad = null;
+      var pendingVolume = 80;
+      var pendingMuted = false;
+      var timeTimer = null;
+
+      function postToParent(payload) {
+        try {
+          window.parent.postMessage(payload, "*");
+        } catch (e) {}
+      }
+
+      function stopTimePolling() {
+        if (timeTimer) {
+          clearInterval(timeTimer);
+          timeTimer = null;
+        }
+      }
+
+      function startTimePolling() {
+        stopTimePolling();
+        timeTimer = setInterval(function () {
+          if (!player || !playerReady) return;
+          try {
+            var currentTime = Number(player.getCurrentTime()) || 0;
+            var duration = Number(player.getDuration()) || 0;
+            postToParent({
+              type: "yt:time",
+              currentTime: currentTime,
+              duration: duration,
+            });
+          } catch (e) {}
+        }, 350);
+      }
+
+      function applyVolume(vol, muted) {
+        pendingVolume = typeof vol === "number" ? vol : pendingVolume;
+        pendingMuted = Boolean(muted);
+        if (!player || !playerReady) return;
+        try {
+          if (pendingMuted) {
+            player.mute();
+          } else {
+            player.unMute();
+            player.setVolume(Math.max(0, Math.min(100, Math.round(pendingVolume))));
+          }
+        } catch (e) {}
+      }
+
+      function loadVideoNow(videoId) {
+        if (!player || !playerReady) {
+          pendingLoad = videoId;
+          return;
+        }
+        try {
+          player.loadVideoById({ videoId: videoId, startSeconds: 0 });
+          applyVolume(pendingVolume, pendingMuted);
+          player.playVideo();
+        } catch (e) {
+          postToParent({ type: "yt:error", code: -1, videoId: videoId });
+        }
+      }
+
+      window.onYouTubeIframeAPIReady = function () {
+        player = new YT.Player("yt-player", {
+          width: "240",
+          height: "240",
+          host: "https://www.youtube.com",
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            modestbranding: 1,
+            playsinline: 1,
+            rel: 0,
+            enablejsapi: 1,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: function (event) {
+              playerReady = true;
+              try {
+                var iframe = event.target.getIframe();
+                if (iframe) {
+                  iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+                  iframe.setAttribute("allow", "autoplay; encrypted-media");
+                }
+              } catch (e) {}
+              applyVolume(pendingVolume, pendingMuted);
+              postToParent({ type: "yt:ready" });
+              if (pendingLoad) {
+                var v = pendingLoad;
+                pendingLoad = null;
+                loadVideoNow(v);
+              }
+            },
+            onStateChange: function (event) {
+              var state = event.data;
+              if (state === 1) {
+                startTimePolling();
+              } else {
+                stopTimePolling();
+              }
+              var currentTime = 0;
+              var duration = 0;
+              try {
+                currentTime = Number(player.getCurrentTime()) || 0;
+                duration = Number(player.getDuration()) || 0;
+              } catch (e) {}
+              postToParent({
+                type: "yt:state",
+                state: state,
+                currentTime: currentTime,
+                duration: duration,
+              });
+            },
+            onError: function (event) {
+              stopTimePolling();
+              postToParent({
+                type: "yt:error",
+                code: event.data,
+              });
+            },
+          },
+        });
+      };
+
+      window.addEventListener("message", function (event) {
+        var msg = event.data;
+        if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
+
+        switch (msg.type) {
+          case "yt:load":
+            if (typeof msg.volume === "number" || typeof msg.muted === "boolean") {
+              applyVolume(msg.volume, msg.muted);
+            }
+            if (msg.videoId) {
+              loadVideoNow(msg.videoId);
+            }
+            break;
+          case "yt:play":
+            if (player && playerReady) {
+              try {
+                player.playVideo();
+              } catch (e) {}
+            }
+            break;
+          case "yt:pause":
+            if (player && playerReady) {
+              try {
+                player.pauseVideo();
+              } catch (e) {}
+            }
+            break;
+          case "yt:stop":
+            stopTimePolling();
+            pendingLoad = null;
+            if (player && playerReady) {
+              try {
+                player.stopVideo();
+              } catch (e) {}
+            }
+            break;
+          case "yt:seek":
+            if (player && playerReady && typeof msg.seconds === "number") {
+              try {
+                player.seekTo(msg.seconds, true);
+              } catch (e) {}
+            }
+            break;
+          case "yt:volume":
+            applyVolume(msg.volume, msg.muted);
+            break;
+        }
+      });
+
+      var tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      tag.referrerPolicy = "strict-origin-when-cross-origin";
+      document.head.appendChild(tag);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+name: Release Skymusic
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Release notes"
+        required: false
+        default: "Performance improvements and bug fixes"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installer & standalone exe
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run tauri build
+
+      - name: Package Windows release artifacts
+        shell: pwsh
+        run: |
+          $tag = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}" } else {
+            $v = (Get-Content package.json | ConvertFrom-Json).version
+            $p = $v.Split(".")
+            "v$($p[0]).$($p[1])"
+          }
+          New-Item -ItemType Directory -Force release-win | Out-Null
+          $rel = "src-tauri\target\release"
+          Copy-Item "$rel\skymusic.exe" "release-win\skymusic.exe"
+          if (Test-Path "$rel\WebView2Loader.dll") {
+            Copy-Item "$rel\WebView2Loader.dll" "release-win\WebView2Loader.dll"
+          }
+          $zipFiles = @("release-win\skymusic.exe")
+          if (Test-Path "release-win\WebView2Loader.dll") { $zipFiles += "release-win\WebView2Loader.dll" }
+          Compress-Archive -Path $zipFiles -DestinationPath "release-win\skymusic_${tag}_windows_portable.zip" -Force
+
+          $nsis = Get-ChildItem "$rel\bundle\nsis\*-setup.exe" | Select-Object -First 1
+          if ($nsis) {
+            $setupDest = "release-win\skymusic_${tag}_x64-setup.exe"
+            Copy-Item $nsis.FullName $setupDest
+            if (Test-Path "$($nsis.FullName).sig") {
+              Copy-Item "$($nsis.FullName).sig" "${setupDest}.sig"
+            }
+          }
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: release-win/*
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK & NDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-36 build-tools;36.0.0 ndk;27.0.12077973"
+
+      - name: Setup Rust stable & Android targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Decode Android Release Keystore
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > src-tauri/gen/android/skymusic-release.jks
+          fi
+
+      - name: Build signed Android APK
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+          NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.0.12077973
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/src-tauri/gen/android/skymusic-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: npm run tauri android build -- --apk
+
+      - name: Package Android release artifacts
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            VER=$(node -p "const p = require('./package.json').version.split('.'); 'v' + p[0] + '.' + p[1]")
+            TAG="$VER"
+          fi
+          mkdir -p release-android
+          APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          cp "$APK_PATH" "release-android/skymusic.apk"
+          cp "$APK_PATH" "release-android/skymusic_${TAG}.apk"
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: release-android/*
+
+  publish-release:
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate latest.json & prepare release notes
+        id: meta
+        shell: bash
+        run: |
+          mkdir -p final-assets
+          cp artifacts/windows-artifacts/* final-assets/
+          cp artifacts/android-artifacts/* final-assets/
+
+          TAG="${{ github.ref_name }}"
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            TAG=$(node -p "const p = require('./package.json').version.split('.'); 'v' + p[0] + '.' + p[1]")
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          SEMVER=$(node -p "require('./package.json').version")
+
+          SIG_FILE=$(find final-assets -name "*-setup.exe.sig" | head -n 1)
+          SETUP_FILE=$(basename "$(find final-assets -name "*-setup.exe" | head -n 1)")
+          SIG_CONTENT=""
+          if [ -n "$SIG_FILE" ] && [ -f "$SIG_FILE" ]; then
+            SIG_CONTENT=$(cat "$SIG_FILE" | tr -d '\r\n')
+          fi
+
+          NOTES="${{ github.event.inputs.notes }}"
+          if [ -z "$NOTES" ] && [ -f "CHANGELOG.md" ]; then
+            NOTES=$(node -e "
+              const fs = require('fs');
+              const md = fs.readFileSync('CHANGELOG.md', 'utf8');
+              const m = md.match(/## \[[^\]]+\][^\n]*\n([\s\S]*?)(?=\n## \[|$)/);
+              console.log(m ? m[1].trim() : '');
+            ")
+          fi
+          if [ -z "$NOTES" ]; then
+            NOTES="Skymusic ${TAG} release — see CHANGELOG.md for full details."
+          fi
+          printf '%s\n' "$NOTES" > final-assets/release-notes.md
+
+          node -e "
+            const fs = require('fs');
+            const latest = {
+              version: '$SEMVER',
+              notes: process.env.NOTES,
+              pub_date: new Date().toISOString(),
+              platforms: {
+                'windows-x86_64': {
+                  signature: process.env.SIG_CONTENT,
+                  url: 'https://github.com/${{ github.repository }}/releases/download/${TAG}/' + process.env.SETUP_FILE
+                }
+              }
+            };
+            fs.writeFileSync('final-assets/latest.json', JSON.stringify(latest, null, 2) + '\n');
+          " NOTES="$NOTES" SIG_CONTENT="$SIG_CONTENT" SETUP_FILE="$SETUP_FILE"
+
+      - name: Create & Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Skymusic ${{ steps.meta.outputs.tag }}
+          body_path: final-assets/release-notes.md
+          files: |
+            final-assets/*.exe
+            final-assets/*.sig
+            final-assets/*.zip
+            final-assets/*.apk
+            final-assets/latest.json
+          generate_release_notes: true
