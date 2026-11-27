@@ -36,6 +36,16 @@ declare global {
       hasVoiceSearch?: () => boolean;
       startVoiceSearch?: () => boolean;
       ensureStoragePermissions?: () => void;
+      updateMediaSession?: (
+        title: string,
+        artist: string,
+        album: string,
+        artworkUrl: string,
+        playing: boolean,
+        positionMs: number,
+        durationMs: number
+      ) => void;
+      clearMediaSession?: () => void;
       exportToMusicFolder?: (
         sourcePath: string,
         displayName: string,

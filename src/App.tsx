@@ -6,9 +6,9 @@ import { PlayerBar } from "./components/PlayerBar";
 import { QueueDrawer } from "./components/QueueDrawer";
 import { Sidebar } from "./components/Sidebar";
 import { UpdateModal } from "./components/UpdateModal";
+import { NavigationProvider, useNavigation } from "./context/NavigationContext";
 import { PlayerProvider, usePlayer } from "./context/PlayerContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import { NavTab } from "./types/music";
 import {
   installSpatialDpadNavigation,
   invokeBackHandlers,
@@ -17,13 +17,17 @@ import {
   syncTvRootAttribute,
 } from "./utils/tvNavigation";
 import { checkForUpdates, UpdateInfo } from "./utils/updater";
+import { AlbumDetailView } from "./views/AlbumDetailView";
+import { ArtistProfileView } from "./views/ArtistProfileView";
 import { HomeView } from "./views/HomeView";
 import { LibraryView } from "./views/LibraryView";
+import { PlaylistDetailView } from "./views/PlaylistDetailView";
 import { SearchView } from "./views/SearchView";
 import { SettingsView } from "./views/SettingsView";
 
 const AppShell: React.FC = () => {
   const { theme } = useTheme();
+  const { activeTab, setActiveTab, currentRoute, clearRoutes } = useNavigation();
   const {
     currentTrack,
     isPlaying,
@@ -32,7 +36,6 @@ const AppShell: React.FC = () => {
     isQueueOpen,
     setQueueOpen,
   } = usePlayer();
-  const [activeTab, setActiveTab] = useState<NavTab>("home");
   const [availableUpdate, setAvailableUpdate] = useState<UpdateInfo | null>(
     null
   );
@@ -69,6 +72,7 @@ const AppShell: React.FC = () => {
         return true;
       }
       if (activeTab !== "home") {
+        clearRoutes();
         setActiveTab("home");
         return true;
       }
@@ -83,8 +87,10 @@ const AppShell: React.FC = () => {
   }, [
     activeTab,
     availableUpdate,
+    clearRoutes,
     isNowPlayingOpen,
     isQueueOpen,
+    setActiveTab,
     setNowPlayingOpen,
     setQueueOpen,
   ]);
@@ -111,6 +117,25 @@ const AppShell: React.FC = () => {
       clearInterval(interval);
     };
   }, []);
+
+  const renderMainContent = () => {
+    if (currentRoute) {
+      if (currentRoute.type === "playlist") {
+        return <PlaylistDetailView section={currentRoute.section} />;
+      }
+      if (currentRoute.type === "artist") {
+        return <ArtistProfileView artist={currentRoute.artist} />;
+      }
+      if (currentRoute.type === "album") {
+        return <AlbumDetailView album={currentRoute.album} />;
+      }
+    }
+
+    if (activeTab === "home") return <HomeView />;
+    if (activeTab === "search") return <SearchView />;
+    if (activeTab === "library") return <LibraryView />;
+    return <SettingsView onUpdateFound={(info) => setAvailableUpdate(info)} />;
+  };
 
   return (
     <div
@@ -175,12 +200,7 @@ const AppShell: React.FC = () => {
               tvMode ? "px-6 pt-4" : "px-4 pt-4 md:px-8 md:pt-6"
             }`}
           >
-            {activeTab === "home" && <HomeView />}
-            {activeTab === "search" && <SearchView />}
-            {activeTab === "library" && <LibraryView />}
-            {activeTab === "settings" && (
-              <SettingsView onUpdateFound={(info) => setAvailableUpdate(info)} />
-            )}
+            {renderMainContent()}
           </div>
         </main>
       </div>
@@ -214,7 +234,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <PlayerProvider>
-        <AppShell />
+        <NavigationProvider>
+          <AppShell />
+        </NavigationProvider>
       </PlayerProvider>
     </ThemeProvider>
   );

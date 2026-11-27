@@ -142,11 +142,31 @@ class MainActivity : TauriActivity() {
     webView.isFocusableInTouchMode = true
     webView.post { webView.requestFocus() }
     webView.addJavascriptInterface(AndroidBridge(this), "SkymusicAndroid")
+    SkymusicMediaService.transportListener = { cmd ->
+      emitJsEvent("skymusic-media-key", JSONObject.quote(cmd))
+    }
   }
 
   override fun onResume() {
     super.onResume()
     webViewRef?.post { webViewRef?.requestFocus() }
+  }
+
+  override fun onPause() {
+    super.onPause()
+    // Keep WebView JS/audio engine active in the background when SkyMusic is playing on Home.
+    if (SkymusicMediaService.hasActiveTrack) {
+      webViewRef?.onResume()
+      webViewRef?.resumeTimers()
+    }
+  }
+
+  override fun onDestroy() {
+    if (isFinishing) {
+      SkymusicMediaService.transportListener = null
+      SkymusicMediaService.clear(this)
+    }
+    super.onDestroy()
   }
 
   override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -356,6 +376,33 @@ class MainActivity : TauriActivity() {
         activity.startActivity(intent)
       } catch (_: Exception) {
       }
+    }
+
+    @JavascriptInterface
+    fun updateMediaSession(
+      title: String?,
+      artist: String?,
+      album: String?,
+      artworkUrl: String?,
+      playing: Boolean,
+      positionMs: Long,
+      durationMs: Long
+    ) {
+      SkymusicMediaService.update(
+        activity.applicationContext,
+        title.orEmpty(),
+        artist.orEmpty(),
+        album.orEmpty(),
+        artworkUrl.orEmpty(),
+        playing,
+        positionMs,
+        durationMs
+      )
+    }
+
+    @JavascriptInterface
+    fun clearMediaSession() {
+      SkymusicMediaService.clear(activity.applicationContext)
     }
   }
 }

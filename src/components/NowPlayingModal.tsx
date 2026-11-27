@@ -15,6 +15,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { useNavigation } from "../context/NavigationContext";
 import { usePlayer } from "../context/PlayerContext";
 import { fetchLyrics, LyricsResult } from "../services/lyricsApi";
 import { formatTime } from "../utils/formatTime";
@@ -53,7 +54,24 @@ export const NowPlayingModal: React.FC = () => {
     toggleLike,
   } = usePlayer();
 
+  const { openArtist } = useNavigation();
   const tvMode = useTvMode();
+
+  const handleOpenCurrentArtist = () => {
+    if (!currentTrack) return;
+    const primaryName = currentTrack.artist.split(/[,&]/)[0].trim() || currentTrack.artist;
+    setNowPlayingOpen(false);
+    openArtist({
+      id: currentTrack.artistId
+        ? `${currentTrack.source === "itunes" ? "it" : "dz"}-art-${currentTrack.artistId}`
+        : `trk-art-${primaryName}`,
+      name: primaryName,
+      deezerId: currentTrack.source === "deezer" ? currentTrack.artistId : undefined,
+      itunesId: currentTrack.source === "itunes" ? currentTrack.artistId : undefined,
+      image: currentTrack.albumArt,
+      source: currentTrack.source === "itunes" ? "itunes" : "deezer",
+    });
+  };
   const [showLyrics, setShowLyrics] = useState(false);
   const [lyricsData, setLyricsData] = useState<LyricsResult | null>(null);
   const [loadingLyrics, setLoadingLyrics] = useState(false);
@@ -442,9 +460,14 @@ export const NowPlayingModal: React.FC = () => {
                       <h2 className="line-clamp-2 text-xl font-extrabold tracking-tight text-[var(--text-primary)]">
                         {currentTrack.title}
                       </h2>
-                      <p className="mt-0.5 truncate text-sm text-[var(--text-secondary)]">
+                      <button
+                        type="button"
+                        onClick={handleOpenCurrentArtist}
+                        className="mt-0.5 block max-w-full truncate rounded px-1 -mx-1 text-left text-sm text-[var(--text-secondary)] hover:text-[#38bdf8] hover:underline"
+                        title="Open Artist Profile"
+                      >
                         {currentTrack.artist}
-                      </p>
+                      </button>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         {currentTrackQuality && (
                           <QualityBadge
@@ -498,9 +521,14 @@ export const NowPlayingModal: React.FC = () => {
                       <h2 className="truncate text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
                         {currentTrack.title}
                       </h2>
-                      <p className="mt-1 truncate text-base text-[var(--text-secondary)]">
+                      <button
+                        type="button"
+                        onClick={handleOpenCurrentArtist}
+                        className="mt-1 block max-w-full truncate rounded px-1 -mx-1 text-left text-base text-[var(--text-secondary)] hover:text-[#38bdf8] hover:underline"
+                        title="Open Artist Profile"
+                      >
                         {currentTrack.artist}
-                      </p>
+                      </button>
                       {currentTrackQuality && (
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <QualityBadge
@@ -564,9 +592,14 @@ export const NowPlayingModal: React.FC = () => {
                       <h2 className="truncate text-xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-2xl">
                         {currentTrack.title}
                       </h2>
-                      <p className="mt-0.5 truncate text-sm text-[var(--text-secondary)]">
+                      <button
+                        type="button"
+                        onClick={handleOpenCurrentArtist}
+                        className="mt-0.5 block max-w-full truncate rounded px-1 -mx-1 text-left text-sm text-[var(--text-secondary)] hover:text-[#38bdf8] hover:underline"
+                        title="Open Artist Profile"
+                      >
                         {currentTrack.artist}
-                      </p>
+                      </button>
                       {currentTrackQuality && (
                         <div className="mt-2.5 flex flex-wrap items-center gap-2">
                           <QualityBadge

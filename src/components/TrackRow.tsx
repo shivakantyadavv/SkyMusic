@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Heart, ListPlus, Pause, Play, Plus } from "lucide-react";
+import { Heart, ListPlus, Pause, Play, Plus, User } from "lucide-react";
+import { useNavigation } from "../context/NavigationContext";
 import { usePlayer } from "../context/PlayerContext";
 import { Track } from "../types/music";
 import { getTrackBadgeQuality } from "../utils/audioQuality";
@@ -31,8 +32,24 @@ export const TrackRow: React.FC<TrackRowProps> = ({
     playlists,
     addTrackToPlaylist,
   } = usePlayer();
+  const { openArtist } = useNavigation();
 
   const [showMenu, setShowMenu] = useState(false);
+
+  const handleOpenArtist = () => {
+    const primaryArtist =
+      track.artist.split(/[,&]/)[0].trim() || track.artist;
+    openArtist({
+      id: track.artistId
+        ? `${track.source === "itunes" ? "it" : "dz"}-art-${track.artistId}`
+        : `row-art-${primaryArtist}`,
+      name: primaryArtist,
+      deezerId: track.source === "deezer" ? track.artistId : undefined,
+      itunesId: track.source === "itunes" ? track.artistId : undefined,
+      image: track.albumArt,
+      source: track.source === "itunes" ? "itunes" : "deezer",
+    });
+  };
 
   const isCurrent = currentTrack?.id === track.id;
   const liked = isLiked(track.id);
@@ -121,6 +138,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         >
           <ListPlus className="h-4 w-4" />
         </button>
+
+        {track.source !== "local" && (
+          <button
+            onClick={handleOpenArtist}
+            className="group-focus-reveal hidden rounded-full p-1.5 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-[#38bdf8] group-hover:opacity-100 md:inline-flex"
+            title={`View ${track.artist.split(/[,&]/)[0].trim()} Profile`}
+          >
+            <User className="h-4 w-4" />
+          </button>
+        )}
 
         {playlists.length > 0 && (
           <div className="relative">

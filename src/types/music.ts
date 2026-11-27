@@ -28,6 +28,8 @@ export interface Track {
   streamUrl: string | null; // preview fallback URL or local file URL
   source: "deezer" | "itunes" | "local" | "downloaded";
   externalUrl?: string;
+  artistId?: number;
+  albumId?: string;
   localPath?: string;
   fileName?: string;
   downloadedAt?: number;
@@ -57,6 +59,10 @@ export interface ArtistItem {
   name: string;
   image: string;
   followers?: string;
+  fans?: number;
+  genre?: string;
+  deezerId?: number;
+  itunesId?: number;
   source: "deezer" | "itunes";
 }
 
@@ -66,6 +72,9 @@ export interface AlbumItem {
   artist: string;
   image: string;
   releaseDate?: string;
+  trackCount?: number;
+  deezerId?: number;
+  itunesId?: number;
   source: "deezer" | "itunes";
 }
 
@@ -84,6 +93,19 @@ export interface HomeSection {
   subtitle: string;
   gradient: string;
   coverImage: string;
+  category?: "charts" | "bollywood" | "pakistan" | "punjabi" | "classics" | "mix";
+  tracks: Track[];
+}
+
+export interface ArtistProfileData {
+  artist: ArtistItem;
+  topTracks: Track[];
+  albums: AlbumItem[];
+  relatedArtists: ArtistItem[];
+}
+
+export interface AlbumDetailData {
+  album: AlbumItem;
   tracks: Track[];
 }
 
@@ -92,3 +114,8 @@ export interface SearchResults {
   artists: ArtistItem[];
   albums: AlbumItem[];
 }
+
+export type DetailRoute =
+  | { type: "playlist"; section: HomeSection }
+  | { type: "artist"; artist: ArtistItem }
+  | { type: "album"; album: AlbumItem };

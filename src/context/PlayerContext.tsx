@@ -1089,7 +1089,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [isNowPlayingOpen, isPlaying]);
 
-  // Sync MediaSession metadata + handle Android TV Remote hardware media keys
+  // Sync MediaSession metadata + Android native MediaSession service
   useEffect(() => {
     if ("mediaSession" in navigator) {
       if (currentTrack) {
@@ -1106,7 +1106,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
-  }, [currentTrack, isPlaying]);
+    try {
+      if (currentTrack) {
+        window.SkymusicAndroid?.updateMediaSession?.(
+          currentTrack.title,
+          currentTrack.artist,
+          currentTrack.album || "Skymusic",
+          currentTrack.albumArt || "",
+          isPlaying,
+          Math.max(0, Math.round(currentTime * 1000)),
+          Math.max(0, Math.round((duration || currentTrack.duration || 0) * 1000))
+        );
+      } else {
+        window.SkymusicAndroid?.clearMediaSession?.();
+      }
+    } catch {
+      // Ignore bridge error outside Android
+    }
+  }, [currentTrack, duration, isPlaying]);
 
   useEffect(() => {
     const togglePlayIfMatch = (targetState?: "play" | "pause") => {
@@ -1118,6 +1135,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const onMediaKey = (e: Event) => {
       const cmd = (e as CustomEvent<string>).detail;
+      if (cmd && cmd.startsWith("seek:")) {
+        const sec = Number(cmd.slice(5));
+        if (Number.isFinite(sec)) seekTo(Math.max(0, sec));
+        return;
+      }
       switch (cmd) {
         case "play_pause":
           togglePlayIfMatch();

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
   ChevronRight,
+  ListMusic,
   Loader2,
   Play,
   RefreshCw,
@@ -10,16 +10,34 @@ import {
   DownloadTrackButton,
   QualityBadge,
 } from "../components/AudioControlsBadges";
-import { TrackRow } from "../components/TrackRow";
+import { useNavigation } from "../context/NavigationContext";
 import { usePlayer } from "../context/PlayerContext";
-import { fetchHomeCatalog } from "../services/musicApi";
-import { HomeSection, Track } from "../types/music";
-import { getTrackBadgeQuality } from "../utils/audioQuality";
 import {
-  onTvCardKeyDown,
-  registerBackHandler,
-  useTvMode,
-} from "../utils/tvNavigation";
+  fetchHomeCatalog,
+  fetchPopularArtists,
+} from "../services/musicApi";
+import { ArtistItem, HomeSection, Track } from "../types/music";
+import { getTrackBadgeQuality } from "../utils/audioQuality";
+import { onTvCardKeyDown, useTvMode } from "../utils/tvNavigation";
+
+type HomeChip =
+  | "all"
+  | "charts"
+  | "bollywood"
+  | "pakistan"
+  | "punjabi"
+  | "classics"
+  | "artists";
+
+const HOME_CHIPS: { id: HomeChip; label: string; opensPlaylistId?: string }[] = [
+  { id: "all", label: "All" },
+  { id: "charts", label: "Top 100 India", opensPlaylistId: "top-100-india" },
+  { id: "pakistan", label: "Pakistan Hits", opensPlaylistId: "hot-hits-pakistan" },
+  { id: "bollywood", label: "Bollywood" },
+  { id: "punjabi", label: "Punjabi" },
+  { id: "classics", label: "90s & Classics" },
+  { id: "artists", label: "Artists" },
+];
 
 export const HomeView: React.FC = () => {
   const {
@@ -32,42 +50,40 @@ export const HomeView: React.FC = () => {
     activeStreamKind,
     atmosPreset,
   } = usePlayer();
+  const { openPlaylist, openArtist } = useNavigation();
 
   const tvMode = useTvMode();
   const [sections, setSections] = useState<HomeSection[]>([]);
+  const [artists, setArtists] = useState<ArtistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(
-    null
-  );
+  const [activeChip, setActiveChip] = useState<HomeChip>("all");
 
-  // Allow TV/Android Back button to collapse expanded playlist before navigating away
-  useEffect(() => {
-    if (!expandedSectionId) return;
-    return registerBackHandler(() => {
-      setExpandedSectionId(null);
-      return true;
-    });
-  }, [expandedSectionId]);
-
-  const loadCatalog = async () => {
-    setLoading(true);
+  const loadCatalog = async (force = false) => {
+    if (force) setRefreshing(true);
+    else setLoading(true);
     setError(null);
     try {
-      const data = await fetchHomeCatalog();
-      setSections(data);
+      const seedTracks = [...recentlyPlayed, ...likedTracks];
+      const [catalog, popArtists] = await Promise.all([
+        fetchHomeCatalog({ force, seedTracks }),
+        fetchPopularArtists(force),
+      ]);
+      setSections(catalog);
+      setArtists(popArtists);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load music catalog."
       );
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    loadCatalog();
+    loadCatalog(false);
   }, []);
 
   const greeting = () => {
@@ -77,18 +93,24 @@ export const HomeView: React.FC = () => {
     return "Good evening";
   };
 
-  const expandedSection = sections.find((s) => s.id === expandedSectionId);
+  const quickPickSections = useMemo(
+    () =>
+      sections
+        .filter((s) => s.id !== "made-for-you")
+        .slice(0, likedTracks.length > 0 ? 5 : 6),
+    [likedTracks.length, sections]
+  );
 
-  const visibleSections =
-    activeFilter === "all"
-      ? sections
-      : sections.filter((s) => s.id === activeFilter);
+  const filteredSections = useMemo(() => {
+    if (activeChip === "all") return sections;
+    if (activeChip === "artists") return [];
+    return sections.filter((s) => s.category === activeChip);
+  }, [activeChip, sections]);
 
   const renderTrackCard = (
     track: Track,
     keyId: string,
-    contextTracks: Track[],
-    cardWidthClass?: string
+    contextTracks: Track[]
   ) => {
     const isCurrent = currentTrack?.id === track.id;
     const quality =
@@ -103,9 +125,7 @@ export const HomeView: React.FC = () => {
         tabIndex={0}
         onClick={() => playTrack(track, contextTracks)}
         onKeyDown={(e) => onTvCardKeyDown(e, () => playTrack(track, contextTracks))}
-        className={`sky-card-interactive group cursor-pointer rounded-xl p-3 ${
-          cardWidthClass || ""
-        }`}
+        className="sky-card-interactive group w-36 shrink-0 cursor-pointer rounded-xl p-3 sm:w-44"
       >
         <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
           <img
@@ -140,107 +160,91 @@ export const HomeView: React.FC = () => {
     );
   };
 
-  if (expandedSection) {
-    return (
-      <div className="space-y-6 pb-8">
-        <button
-          onClick={() => setExpandedSectionId(null)}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </button>
-
-        {/* Category Playlist Hero */}
-        <div
-          className={`flex flex-col gap-5 rounded-2xl bg-gradient-to-br ${expandedSection.gradient} p-6 shadow-xl sm:flex-row sm:items-end`}
-        >
-          <img
-            src={expandedSection.coverImage}
-            alt={expandedSection.title}
-            className="h-36 w-36 shrink-0 rounded-xl object-cover shadow-2xl sm:h-44 sm:w-44"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/80">
-              Curated Collection
-            </p>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-              {expandedSection.title}
-            </h2>
-            <p className="mt-1.5 text-sm text-white/85">
-              {expandedSection.subtitle} • {expandedSection.tracks.length} songs
-            </p>
-            <button
-              onClick={() =>
-                playTrack(expandedSection.tracks[0], expandedSection.tracks)
-              }
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#1DB954] px-6 py-2.5 text-sm font-bold text-black shadow-lg transition hover:scale-105 hover:bg-[#1ed760]"
-            >
-              <Play className="h-4 w-4 fill-current" />
-              Play All
-            </button>
-          </div>
-        </div>
-
-        <div className="sky-card rounded-xl p-2">
-          {expandedSection.tracks.map((track, idx) => (
-            <TrackRow
-              key={track.id}
-              track={track}
-              index={idx}
-              contextList={expandedSection.tracks}
-            />
-          ))}
-        </div>
+  const renderArtistCard = (artist: ArtistItem, gridLayout = false) => (
+    <div
+      key={`home-art-${artist.id}`}
+      role="button"
+      tabIndex={0}
+      onClick={() => openArtist(artist)}
+      onKeyDown={(e) => onTvCardKeyDown(e, () => openArtist(artist))}
+      className={`sky-card-interactive group cursor-pointer rounded-xl p-3 text-center ${
+        gridLayout ? "w-full" : "w-32 shrink-0 sm:w-40"
+      }`}
+    >
+      <div className="relative mx-auto mb-2.5 aspect-square w-24 overflow-hidden rounded-full shadow-lg sm:w-28">
+        <img
+          src={artist.image}
+          alt={artist.name}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+        />
       </div>
-    );
-  }
+      <p className="truncate text-sm font-bold text-[var(--text-primary)]">
+        {artist.name}
+      </p>
+      <p className="truncate text-[11px] text-[var(--text-secondary)]">
+        {artist.genre || "Artist"}
+      </p>
+    </div>
+  );
 
   return (
     <div className="space-y-8 pb-8">
-      {/* Top Greeting + Category Filter Chips (Spotify Style) */}
+      {/* Top Greeting + Refresh + Filter Chips */}
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-3xl">
-            {greeting()}
-          </h2>
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-3xl">
+              {greeting()}
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)]">
+              India &amp; Pakistan Charts • Bollywood, Coke Studio, Punjabi &amp; Classics
+            </p>
+          </div>
           <button
-            onClick={loadCatalog}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
-            title="Refresh Home"
+            onClick={() => loadCatalog(true)}
+            disabled={loading || refreshing}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)] disabled:opacity-60"
+            title="Mix fresh suggestions"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+              className={`h-3.5 w-3.5 ${
+                loading || refreshing ? "animate-spin" : ""
+              }`}
             />
-            Refresh
+            {refreshing ? "Mixing..." : "Refresh Mix"}
           </button>
         </div>
 
         {/* Category Chips */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setActiveFilter("all")}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-              activeFilter === "all"
-                ? "bg-[var(--chip-active-bg)] text-[var(--chip-active-fg)] shadow-sm"
-                : "border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
-            }`}
-          >
-            All
-          </button>
-          {sections.map((sec) => (
-            <button
-              key={sec.id}
-              onClick={() => setActiveFilter(sec.id)}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                activeFilter === sec.id
-                  ? "bg-[#1DB954] text-black shadow-sm"
-                  : "border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
-              }`}
-            >
-              {sec.title}
-            </button>
-          ))}
+          {HOME_CHIPS.map((chip) => {
+            const selected = activeChip === chip.id;
+            return (
+              <button
+                key={chip.id}
+                onClick={() => {
+                  if (chip.opensPlaylistId) {
+                    const target = sections.find((s) => s.id === chip.opensPlaylistId);
+                    if (target) {
+                      openPlaylist(target);
+                      return;
+                    }
+                  }
+                  setActiveChip(chip.id);
+                }}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                  selected
+                    ? chip.id === "all"
+                      ? "bg-[var(--chip-active-bg)] text-[var(--chip-active-fg)] shadow-sm"
+                      : "bg-[#1DB954] text-black shadow-sm"
+                    : "border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -249,7 +253,7 @@ export const HomeView: React.FC = () => {
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-[#0EA5E9]" />
             <p className="text-xs text-[var(--text-secondary)]">
-              Loading Bollywood, Hollywood, Punjabi &amp; Global Charts...
+              Loading Top 100 India, Hot Hits Pakistan, Bollywood &amp; Artists...
             </p>
           </div>
         </div>
@@ -257,26 +261,41 @@ export const HomeView: React.FC = () => {
         <div className="sky-card rounded-xl p-6 text-center text-sm text-[var(--text-secondary)]">
           <p>{error}</p>
           <button
-            onClick={loadCatalog}
+            onClick={() => loadCatalog(true)}
             className="mt-3 rounded-full bg-[#0EA5E9] px-4 py-1.5 text-xs font-semibold text-white"
           >
             Retry
           </button>
         </div>
+      ) : activeChip === "artists" ? (
+        /* Dedicated Artists Directory Grid */
+        <section className="space-y-4">
+          <div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)]">
+              India &amp; Pakistan Star Artists
+            </h3>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Click any singer to view their full profile, top songs &amp; albums
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {artists.map((art) => renderArtistCard(art, true))}
+          </div>
+        </section>
       ) : (
         <>
-          {/* Quick-Pick Compact Suggestion Cards Grid (Spotify Top Grid) */}
-          {activeFilter === "all" && (
+          {/* Quick-Pick Compact Charts Grid (Click opens full Spotify numbered Playlist!) */}
+          {activeChip === "all" && (
             <section>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
-                {sections.map((sec) => (
+                {quickPickSections.map((sec) => (
                   <div
                     key={sec.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setExpandedSectionId(sec.id)}
+                    onClick={() => openPlaylist(sec)}
                     onKeyDown={(e) =>
-                      onTvCardKeyDown(e, () => setExpandedSectionId(sec.id))
+                      onTvCardKeyDown(e, () => openPlaylist(sec))
                     }
                     className="sky-card-interactive group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg pr-3"
                   >
@@ -295,7 +314,7 @@ export const HomeView: React.FC = () => {
                         {sec.title}
                       </p>
                       <p className="truncate text-[11px] text-[var(--text-secondary)]">
-                        {sec.tracks.length} tracks
+                        {sec.tracks.length} songs
                       </p>
                     </div>
                     {!tvMode && (
@@ -317,7 +336,16 @@ export const HomeView: React.FC = () => {
                   <div
                     role="button"
                     tabIndex={0}
-                    onClick={() => playTrack(likedTracks[0], likedTracks)}
+                    onClick={() =>
+                      openPlaylist({
+                        id: "liked-collection",
+                        title: "Liked Songs",
+                        subtitle: "Your saved favorite tracks",
+                        gradient: "from-[#0EA5E9] to-[#1DB954]",
+                        coverImage: likedTracks[0].albumArt,
+                        tracks: likedTracks,
+                      })
+                    }
                     onKeyDown={(e) =>
                       onTvCardKeyDown(e, () =>
                         playTrack(likedTracks[0], likedTracks)
@@ -343,7 +371,7 @@ export const HomeView: React.FC = () => {
           )}
 
           {/* Horizontal Recently Played Row (right above Top Trending) */}
-          {activeFilter === "all" && recentlyPlayed.length > 0 && (
+          {activeChip === "all" && recentlyPlayed.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-end justify-between">
                 <div>
@@ -364,44 +392,116 @@ export const HomeView: React.FC = () => {
 
               <div className="flex gap-4 overflow-x-auto pb-2 pt-1">
                 {recentlyPlayed.map((track) =>
-                  renderTrackCard(
-                    track,
-                    `recent-${track.id}`,
-                    recentlyPlayed,
-                    "w-36 shrink-0 sm:w-44"
-                  )
+                  renderTrackCard(track, `recent-${track.id}`, recentlyPlayed)
                 )}
               </div>
             </section>
           )}
 
-          {/* Spotify-Style Suggestion Card Shelves */}
-          {visibleSections.map((sec) => (
-            <section key={sec.id} className="space-y-3">
+          {/* Popular Artists (India & Pakistan) -> Click opens full Artist Profile! */}
+          {activeChip === "all" && artists.length > 0 && (
+            <section className="space-y-3">
               <div className="flex items-end justify-between">
                 <div>
-                  <h3
-                    onClick={() => setExpandedSectionId(sec.id)}
-                    className="cursor-pointer text-xl font-bold tracking-tight text-[var(--text-primary)] hover:underline"
-                  >
-                    {sec.title}
+                  <h3 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                    Popular Artists • India &amp; Pakistan
                   </h3>
                   <p className="text-xs text-[var(--text-secondary)]">
-                    {sec.subtitle}
+                    Arijit Singh, Vishal Mishra, Atif Aslam, Sonu Nigam, Diljit &amp; more
                   </p>
                 </div>
                 <button
-                  onClick={() => setExpandedSectionId(sec.id)}
+                  onClick={() => setActiveChip("artists")}
                   className="inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
-                  Show all
+                  See all
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="flex gap-4 overflow-x-auto pb-2 pt-1">
+                {artists.map((art) => renderArtistCard(art, false))}
+              </div>
+            </section>
+          )}
+
+          {/* Spotify Playlist / Chart Cards Row (Click opens 50-100 track Spotify table!) */}
+          {activeChip === "all" && sections.length > 0 && (
+            <section className="space-y-3">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                  Top Charts &amp; Curated Playlists
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Open any chart to browse full 80–100 song lists just like Spotify
+                </p>
+              </div>
+
+              <div className="flex gap-4 overflow-x-auto pb-2 pt-1">
+                {sections
+                  .filter((s) => s.id !== "made-for-you")
+                  .map((sec) => (
+                    <div
+                      key={`pl-card-${sec.id}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openPlaylist(sec)}
+                      onKeyDown={(e) =>
+                        onTvCardKeyDown(e, () => openPlaylist(sec))
+                      }
+                      className="sky-card-interactive group w-40 shrink-0 cursor-pointer rounded-xl p-3 sm:w-44"
+                    >
+                      <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
+                        <img
+                          src={sec.coverImage}
+                          alt={sec.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-black/75 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                          <ListMusic className="h-3 w-3 text-[#1DB954]" />
+                          {sec.tracks.length}
+                        </span>
+                        <div className="group-focus-reveal absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
+                          <Play className="ml-0.5 h-5 w-5 fill-current" />
+                        </div>
+                      </div>
+                      <p className="truncate text-sm font-bold text-[var(--text-primary)]">
+                        {sec.title}
+                      </p>
+                      <p className="line-clamp-1 text-xs text-[var(--text-secondary)]">
+                        {sec.subtitle}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            </section>
+          )}
+
+          {/* Rich Horizontal Scrollable Song Recommendation Shelves (12+ songs per shelf + Open Full List button) */}
+          {filteredSections.map((sec) => (
+            <section key={sec.id} className="space-y-3">
+              <div className="flex items-end justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="truncate text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                    {sec.title}
+                  </h3>
+                  <p className="truncate text-xs text-[var(--text-secondary)]">
+                    {sec.subtitle}
+                  </p>
+                </div>
+                <button
+                  onClick={() => openPlaylist(sec)}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
+                >
+                  Open {sec.tracks.length} Songs
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="flex gap-4 overflow-x-auto pb-2 pt-1">
                 {sec.tracks
-                  .slice(0, tvMode ? 4 : 6)
+                  .slice(0, 14)
                   .map((track) =>
                     renderTrackCard(track, `${sec.id}-${track.id}`, sec.tracks)
                   )}
