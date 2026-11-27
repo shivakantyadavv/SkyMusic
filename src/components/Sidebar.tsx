@@ -6,9 +6,11 @@ import {
   Library,
   Search,
   Settings,
+  Tv,
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { NavTab } from "../types/music";
+import { useTvMode } from "../utils/tvNavigation";
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -17,6 +19,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { playlists, likedTracks, importLocalTracks } = usePlayer();
+  const tvMode = useTvMode();
 
   const navItems: { id: NavTab; label: string; icon: React.ReactNode }[] = [
     { id: "home", label: "Home", icon: <Home className="h-5 w-5" /> },
@@ -35,23 +38,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
 
   return (
     <aside
-      className="hidden h-full w-64 shrink-0 flex-col gap-2 p-2 md:flex"
+      className={`hidden h-full shrink-0 flex-col gap-2 md:flex ${
+        tvMode ? "w-52 p-1.5" : "w-64 p-2"
+      }`}
       style={{ backgroundColor: "var(--bg-sidebar-shell)" }}
     >
       {/* Brand Header */}
-      <div className="sky-card rounded-xl p-4">
+      <div className={`sky-card rounded-xl ${tvMode ? "p-3" : "p-4"}`}>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] shadow-lg shadow-[#0EA5E9]/20">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] shadow-lg shadow-[#0EA5E9]/20">
             <Disc3 className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h1
-              className="text-lg font-bold tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Skymusic
-            </h1>
-            <p className="text-[11px]" style={{ color: "var(--text-secondary)" }}>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h1
+                className="truncate text-lg font-bold tracking-tight"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Skymusic
+              </h1>
+              {tvMode && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-[#0EA5E9]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#38bdf8]">
+                  <Tv className="h-2.5 w-2.5" />
+                  TV
+                </span>
+              )}
+            </div>
+            <p className="truncate text-[11px]" style={{ color: "var(--text-secondary)" }}>
               High Quality Audio
             </p>
           </div>
@@ -65,6 +78,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
           return (
             <button
               key={item.id}
+              data-active={active ? "true" : undefined}
+              data-tv-autofocus={active ? "true" : undefined}
               onClick={() => onSelectTab(item.id)}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors"
               style={{

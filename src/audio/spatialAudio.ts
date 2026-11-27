@@ -190,7 +190,11 @@ export class SpatialAudioEngine {
 
     if (!AudioCtx) return;
 
-    const ctx = this.ctx || new AudioCtx();
+    const ctx =
+      this.ctx ||
+      new AudioCtx({
+        latencyHint: "playback",
+      });
     this.ctx = ctx;
 
     if (!this.sourceNode) {

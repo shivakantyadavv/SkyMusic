@@ -26,6 +26,7 @@ import {
   Track,
 } from "../types/music";
 import { getTrackBadgeQuality, StreamSourceKind } from "../utils/audioQuality";
+import { isTvMode } from "../utils/tvNavigation";
 
 type ActiveBackend = "youtube" | "html5" | null;
 
@@ -1077,6 +1078,98 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!currentTrack) return null;
     return getTrackBadgeQuality(currentTrack, true, atmosPreset, activeStreamKind);
   }, [activeStreamKind, atmosPreset, currentTrack]);
+
+  // Keep TV display awake while music is playing or Now Playing theater is open
+  useEffect(() => {
+    if (!isTvMode()) return;
+    try {
+      window.SkymusicAndroid?.setKeepScreenOn?.(isPlaying || isNowPlayingOpen);
+    } catch {
+      // Ignore bridge error outside Android
+    }
+  }, [isNowPlayingOpen, isPlaying]);
+
+  // Sync MediaSession metadata + handle Android TV Remote hardware media keys
+  useEffect(() => {
+    if ("mediaSession" in navigator) {
+      if (currentTrack) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentTrack.title,
+          artist: currentTrack.artist,
+          album: currentTrack.album || "Skymusic",
+          artwork: currentTrack.albumArt
+            ? [
+                { src: currentTrack.albumArt, sizes: "512x512", type: "image/jpeg" },
+              ]
+            : [],
+        });
+      }
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
+  }, [currentTrack, isPlaying]);
+
+  useEffect(() => {
+    const togglePlayIfMatch = (targetState?: "play" | "pause") => {
+      if (!currentTrackRef.current) return;
+      if (targetState === "play" && isPlaying) return;
+      if (targetState === "pause" && !isPlaying) return;
+      togglePlay();
+    };
+
+    const onMediaKey = (e: Event) => {
+      const cmd = (e as CustomEvent<string>).detail;
+      switch (cmd) {
+        case "play_pause":
+          togglePlayIfMatch();
+          break;
+        case "play":
+          togglePlayIfMatch("play");
+          break;
+        case "pause":
+        case "stop":
+          togglePlayIfMatch("pause");
+          break;
+        case "next":
+          playNext();
+          break;
+        case "prev":
+          playPrev();
+          break;
+        case "ff":
+          seekTo(Math.min(duration || 0, currentTime + 10));
+          break;
+        case "rw":
+          seekTo(Math.max(0, currentTime - 10));
+          break;
+      }
+    };
+
+    window.addEventListener("skymusic-media-key", onMediaKey);
+
+    if ("mediaSession" in navigator) {
+      const safeSet = (
+        action: MediaSessionAction,
+        handler: MediaSessionActionHandler | null
+      ) => {
+        try {
+          navigator.mediaSession.setActionHandler(action, handler);
+        } catch {
+          // Ignore unsupported MediaSession action
+        }
+      };
+      safeSet("play", () => togglePlayIfMatch("play"));
+      safeSet("pause", () => togglePlayIfMatch("pause"));
+      safeSet("nexttrack", () => playNext());
+      safeSet("previoustrack", () => playPrev());
+      safeSet("seekto", (d) => {
+        if (typeof d.seekTime === "number") seekTo(d.seekTime);
+      });
+    }
+
+    return () => {
+      window.removeEventListener("skymusic-media-key", onMediaKey);
+    };
+  }, [currentTime, duration, isPlaying, playNext, playPrev, seekTo, togglePlay]);
 
   // Keep bridgePort referenced silently in case future callers need it
   void bridgePort;

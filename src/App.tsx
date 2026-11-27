@@ -9,6 +9,13 @@ import { UpdateModal } from "./components/UpdateModal";
 import { PlayerProvider, usePlayer } from "./context/PlayerContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { NavTab } from "./types/music";
+import {
+  installSpatialDpadNavigation,
+  invokeBackHandlers,
+  isTvMode,
+  registerBackHandler,
+  syncTvRootAttribute,
+} from "./utils/tvNavigation";
 import { checkForUpdates, UpdateInfo } from "./utils/updater";
 import { HomeView } from "./views/HomeView";
 import { LibraryView } from "./views/LibraryView";
@@ -17,11 +24,70 @@ import { SettingsView } from "./views/SettingsView";
 
 const AppShell: React.FC = () => {
   const { theme } = useTheme();
-  const { currentTrack, isPlaying } = usePlayer();
+  const {
+    currentTrack,
+    isPlaying,
+    isNowPlayingOpen,
+    setNowPlayingOpen,
+    isQueueOpen,
+    setQueueOpen,
+  } = usePlayer();
   const [activeTab, setActiveTab] = useState<NavTab>("home");
   const [availableUpdate, setAvailableUpdate] = useState<UpdateInfo | null>(
     null
   );
+  const [tvMode, setTvMode] = useState<boolean>(() => syncTvRootAttribute());
+
+  // Sync TV mode attribute & listen for preference toggles
+  useEffect(() => {
+    setTvMode(syncTvRootAttribute());
+    const onTvChange = () => setTvMode(isTvMode());
+    window.addEventListener("skymusic-tv-mode-change", onTvChange);
+    const cleanupDpad = installSpatialDpadNavigation();
+    return () => {
+      window.removeEventListener("skymusic-tv-mode-change", onTvChange);
+      cleanupDpad();
+    };
+  }, []);
+
+  // Register global Android / TV Remote Back stack handler
+  useEffect(() => {
+    window.__skymusicHandleBack = () => {
+      if (availableUpdate) {
+        setAvailableUpdate(null);
+        return true;
+      }
+      if (isQueueOpen) {
+        setQueueOpen(false);
+        return true;
+      }
+      if (isNowPlayingOpen) {
+        setNowPlayingOpen(false);
+        return true;
+      }
+      if (invokeBackHandlers()) {
+        return true;
+      }
+      if (activeTab !== "home") {
+        setActiveTab("home");
+        return true;
+      }
+      return false;
+    };
+
+    const unregDefault = registerBackHandler(() => false);
+    return () => {
+      unregDefault();
+      delete window.__skymusicHandleBack;
+    };
+  }, [
+    activeTab,
+    availableUpdate,
+    isNowPlayingOpen,
+    isQueueOpen,
+    setNowPlayingOpen,
+    setQueueOpen,
+  ]);
 
   useEffect(() => {
     const initialTimer = setTimeout(() => {
@@ -48,7 +114,9 @@ const AppShell: React.FC = () => {
 
   return (
     <div
-      className="relative flex h-full flex-col overflow-hidden transition-colors duration-300"
+      className={`relative flex h-full flex-col overflow-hidden transition-colors duration-300 ${
+        tvMode ? "p-1.5" : ""
+      }`}
       style={{
         backgroundColor: "var(--bg-app)",
         color: "var(--text-primary)",
@@ -102,7 +170,11 @@ const AppShell: React.FC = () => {
           </header>
 
           {/* Scrollable Page Content */}
-          <div className="flex-1 overflow-y-auto px-4 pt-4 md:px-8 md:pt-6">
+          <div
+            className={`flex-1 overflow-y-auto ${
+              tvMode ? "px-6 pt-4" : "px-4 pt-4 md:px-8 md:pt-6"
+            }`}
+          >
             {activeTab === "home" && <HomeView />}
             {activeTab === "search" && <SearchView />}
             {activeTab === "library" && <LibraryView />}

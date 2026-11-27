@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Trash2, X } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { formatTime } from "../utils/formatTime";
+import {
+  focusPrimaryInScope,
+  onTvCardKeyDown,
+  useTvMode,
+} from "../utils/tvNavigation";
 
 export const QueueDrawer: React.FC = () => {
   const {
@@ -13,11 +18,20 @@ export const QueueDrawer: React.FC = () => {
     removeFromQueue,
     clearQueue,
   } = usePlayer();
+  const tvMode = useTvMode();
+
+  useEffect(() => {
+    if (isQueueOpen && tvMode) {
+      const t = window.setTimeout(() => focusPrimaryInScope("queue"), 80);
+      return () => window.clearTimeout(t);
+    }
+  }, [isQueueOpen, tvMode]);
 
   if (!isQueueOpen) return null;
 
   return (
     <aside
+      data-tv-scope="queue"
       className="sky-surface-strong fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col border-l shadow-2xl"
       style={{ borderColor: "var(--border-subtle)" }}
     >
@@ -43,8 +57,10 @@ export const QueueDrawer: React.FC = () => {
           )}
           <button
             onClick={() => setQueueOpen(false)}
+            data-tv-autofocus="true"
             className="rounded-full p-1 transition-colors hover:bg-[var(--bg-card-hover)]"
             style={{ color: "var(--text-secondary)" }}
+            aria-label="Close Queue"
           >
             <X className="h-5 w-5" />
           </button>
@@ -117,28 +133,32 @@ export const QueueDrawer: React.FC = () => {
                   key={`${track.id}-${idx}`}
                   className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-[var(--bg-card-hover)]"
                 >
-                  <img
-                    src={track.albumArt}
-                    alt={track.album}
-                    onClick={() => playTrack(track)}
-                    className="h-10 w-10 cursor-pointer rounded object-cover"
-                  />
                   <div
-                    className="min-w-0 flex-1 cursor-pointer"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => playTrack(track)}
+                    onKeyDown={(e) => onTvCardKeyDown(e, () => playTrack(track))}
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-md p-0.5"
                   >
-                    <p
-                      className="truncate text-sm font-medium"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {track.title}
-                    </p>
-                    <p
-                      className="truncate text-xs"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {track.artist}
-                    </p>
+                    <img
+                      src={track.albumArt}
+                      alt={track.album}
+                      className="h-10 w-10 rounded object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="truncate text-sm font-medium"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {track.title}
+                      </p>
+                      <p
+                        className="truncate text-xs"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        {track.artist}
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={() => removeFromQueue(idx)}

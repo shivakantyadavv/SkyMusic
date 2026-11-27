@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Search as SearchIcon } from "lucide-react";
+import { Loader2, Mic, Search as SearchIcon } from "lucide-react";
 import { TrackRow } from "../components/TrackRow";
 import { searchMusic } from "../services/musicApi";
 import { SearchResults } from "../types/music";
+import {
+  focusPrimaryInScope,
+  hasTvVoiceSearch,
+  startTvVoiceSearch,
+  useTvMode,
+} from "../utils/tvNavigation";
 
 const BROWSE_CARDS = [
   {
@@ -46,6 +52,20 @@ export const SearchView: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tvMode = useTvMode();
+  const voiceSupported = hasTvVoiceSearch();
+
+  // Receive Android TV Google Assistant / Mic voice search transcription
+  useEffect(() => {
+    const onVoice = (e: Event) => {
+      const spoken = (e as CustomEvent<string>).detail;
+      if (typeof spoken === "string" && spoken.trim()) {
+        setQuery(spoken.trim());
+      }
+    };
+    window.addEventListener("skymusic-voice-search", onVoice);
+    return () => window.removeEventListener("skymusic-voice-search", onVoice);
+  }, []);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -77,20 +97,41 @@ export const SearchView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Search Bar */}
-      <div className="relative max-w-2xl">
-        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-secondary)]" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="What do you want to play?"
-          className="w-full rounded-full border border-[var(--border-subtle)] bg-[var(--bg-input)] py-3 pl-12 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] shadow-sm outline-none transition focus:border-[#0EA5E9] focus:bg-[var(--bg-card-hover)]"
-          style={{
-            backdropFilter: "var(--backdrop-blur)",
-            WebkitBackdropFilter: "var(--backdrop-blur)",
-          }}
-        />
+      {/* Search Bar + Optional Android TV Voice Search Mic */}
+      <div className="flex max-w-2xl items-center gap-2.5">
+        <div className="relative flex-1">
+          <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-secondary)]" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && tvMode) {
+                e.preventDefault();
+                e.currentTarget.blur();
+                window.setTimeout(() => focusPrimaryInScope(), 80);
+              }
+            }}
+            placeholder="What do you want to play?"
+            className="w-full rounded-full border border-[var(--border-subtle)] bg-[var(--bg-input)] py-3 pl-12 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] shadow-sm outline-none transition focus:border-[#0EA5E9] focus:bg-[var(--bg-card-hover)]"
+            style={{
+              backdropFilter: "var(--backdrop-blur)",
+              WebkitBackdropFilter: "var(--backdrop-blur)",
+            }}
+          />
+        </div>
+
+        {(voiceSupported || tvMode) && voiceSupported && (
+          <button
+            type="button"
+            onClick={() => startTvVoiceSearch()}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[#0EA5E9] text-white shadow-lg shadow-[#0EA5E9]/25 transition hover:bg-[#0284C7]"
+            title="Voice Search with TV Remote"
+            aria-label="Voice Search"
+          >
+            <Mic className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Browse Category Cards when search box is empty */}

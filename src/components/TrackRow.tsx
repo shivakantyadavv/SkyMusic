@@ -51,55 +51,55 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   return (
     <div
-      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[var(--bg-card-hover)] ${
+      className={`group relative flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--bg-card-hover)] ${
         isCurrent ? "bg-[var(--bg-card-hover)]" : ""
       }`}
     >
-      {/* Index / Play button */}
+      {/* Unified Primary Play / Title Control for Clean TV D-Pad & Mouse Navigation */}
       <button
+        type="button"
         onClick={handlePlay}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        aria-label={isCurrent && isPlaying ? "Pause" : "Play"}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 text-left"
+        aria-label={`${isCurrent && isPlaying ? "Pause" : "Play"} ${track.title}`}
       >
-        {isCurrent && isPlaying ? (
-          <Pause className="h-4 w-4 text-[#0EA5E9]" />
-        ) : (
-          <>
-            <span className="group-hover:hidden">{index + 1}</span>
-            <Play className="hidden h-4 w-4 fill-current text-[var(--text-primary)] group-hover:block" />
-          </>
-        )}
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">
+          {isCurrent && isPlaying ? (
+            <Pause className="h-4 w-4 text-[#0EA5E9]" />
+          ) : (
+            <>
+              <span className="group-hover:hidden">{index + 1}</span>
+              <Play className="hidden h-4 w-4 fill-current text-[var(--text-primary)] group-hover:block" />
+            </>
+          )}
+        </span>
+
+        <img
+          src={track.albumArt}
+          alt={track.album}
+          className="h-11 w-11 shrink-0 rounded object-cover shadow"
+          loading="lazy"
+        />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <p
+              className={`truncate text-sm font-medium ${
+                isCurrent ? "text-[#0EA5E9]" : "text-[var(--text-primary)]"
+              }`}
+            >
+              {track.title}
+            </p>
+            <QualityBadge quality={badgeQuality} compact />
+          </div>
+          <p className="truncate text-xs text-[var(--text-secondary)]">
+            {track.artist}
+            <span className="hidden sm:inline"> • {track.album}</span>
+          </p>
+        </div>
       </button>
 
-      {/* Album Art */}
-      <img
-        src={track.albumArt}
-        alt={track.album}
-        onClick={handlePlay}
-        className="h-11 w-11 shrink-0 cursor-pointer rounded object-cover shadow"
-        loading="lazy"
-      />
-
-      {/* Title & Artist */}
-      <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
-        <div className="flex items-center gap-1.5">
-          <p
-            className={`truncate text-sm font-medium ${
-              isCurrent ? "text-[#0EA5E9]" : "text-[var(--text-primary)]"
-            }`}
-          >
-            {track.title}
-          </p>
-          <QualityBadge quality={badgeQuality} compact />
-        </div>
-        <p className="truncate text-xs text-[var(--text-secondary)]">
-          {track.artist}
-          <span className="hidden sm:inline"> • {track.album}</span>
-        </p>
-      </div>
-
       {/* Actions */}
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1 pr-1">
         <DownloadTrackButton track={track} size="sm" />
 
         <button
@@ -116,7 +116,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
         <button
           onClick={() => addToQueue(track)}
-          className="hidden rounded-full p-1.5 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-[var(--text-primary)] group-hover:opacity-100 sm:inline-flex"
+          className="group-focus-reveal hidden rounded-full p-1.5 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-[var(--text-primary)] group-hover:opacity-100 sm:inline-flex"
           title="Add to Queue"
         >
           <ListPlus className="h-4 w-4" />

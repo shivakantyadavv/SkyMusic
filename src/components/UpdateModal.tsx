@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Download, Loader2, Sparkles, X } from "lucide-react";
+import { focusPrimaryInScope, useTvMode } from "../utils/tvNavigation";
 import {
   formatShortVersion,
   installAppUpdate,
@@ -18,8 +19,17 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   const [installing, setInstalling] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const tvMode = useTvMode();
+  const isOpen = Boolean(update && update.available);
 
-  if (!update || !update.available) return null;
+  useEffect(() => {
+    if (isOpen && tvMode) {
+      const t = window.setTimeout(() => focusPrimaryInScope("update"), 80);
+      return () => window.clearTimeout(t);
+    }
+  }, [isOpen, tvMode]);
+
+  if (!isOpen || !update) return null;
 
   const handleInstall = async () => {
     setInstalling(true);
@@ -38,7 +48,10 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div
+      data-tv-scope="update"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+    >
       <div className="sky-surface-strong w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border-subtle)] shadow-2xl">
         {/* Top Accent Banner */}
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-gradient-to-r from-[#0EA5E9]/20 to-[#1DB954]/15 px-5 py-4">
@@ -111,6 +124,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             <button
               onClick={handleInstall}
               disabled={installing}
+              data-tv-autofocus="true"
               className="inline-flex items-center gap-2 rounded-full bg-[#1DB954] px-5 py-2 text-xs font-bold text-black shadow-lg transition hover:bg-[#1ed760] disabled:opacity-60"
             >
               {installing ? (

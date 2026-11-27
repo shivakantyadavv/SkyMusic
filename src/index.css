@@ -206,3 +206,40 @@ input[type="range"].sky-range::-webkit-slider-thumb {
 input[type="range"].sky-range:hover::-webkit-slider-thumb {
   transform: scale(1.2);
 }
+
+/* Android TV / 10-foot D-Pad Focus & Ergonomics */
+[data-tv="true"] {
+  user-select: none;
+}
+
+[data-tv="true"] button:focus,
+[data-tv="true"] a:focus,
+[data-tv="true"] input:focus,
+[data-tv="true"] [role="button"]:focus,
+[data-tv="true"] [tabindex]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2.5px #38bdf8, 0 0 20px rgba(56, 189, 248, 0.45);
+}
+
+[data-tv="true"] .sky-card-interactive:focus {
+  background-color: var(--bg-card-hover);
+  border-color: #38bdf8;
+  transform: scale(1.03);
+  position: relative;
+  z-index: 5;
+}
+
+[data-tv="true"] .group:focus-within .group-focus-reveal,
+.group:focus-within .group-focus-reveal {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+[data-tv="true"] input[type="range"].sky-range:focus {
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.55);
+}
+
+[data-tv="true"] input[type="range"].sky-range:focus::-webkit-slider-thumb {
+  transform: scale(1.45);
+  background: #38bdf8;
+}

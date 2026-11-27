@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Download,
   FolderOpen,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { TrackRow } from "../components/TrackRow";
 import { usePlayer } from "../context/PlayerContext";
+import { onTvCardKeyDown, registerBackHandler } from "../utils/tvNavigation";
 
 type LibraryTab = "liked" | "downloaded" | "playlists" | "local";
 
@@ -34,6 +35,14 @@ export const LibraryView: React.FC = () => {
   );
 
   const activePlaylist = playlists.find((p) => p.id === selectedPlaylistId);
+
+  useEffect(() => {
+    if (!selectedPlaylistId) return;
+    return registerBackHandler(() => {
+      setSelectedPlaylistId(null);
+      return true;
+    });
+  }, [selectedPlaylistId]);
 
   const handleCreatePlaylist = (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,7 +249,12 @@ export const LibraryView: React.FC = () => {
               {playlists.map((pl) => (
                 <div
                   key={pl.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedPlaylistId(pl.id)}
+                  onKeyDown={(e) =>
+                    onTvCardKeyDown(e, () => setSelectedPlaylistId(pl.id))
+                  }
                   className="sky-card-interactive group flex cursor-pointer items-center justify-between rounded-xl p-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -269,7 +283,7 @@ export const LibraryView: React.FC = () => {
                       e.stopPropagation();
                       deletePlaylist(pl.id);
                     }}
-                    className="rounded p-1.5 text-[var(--text-muted)] opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                    className="group-focus-reveal rounded p-1.5 text-[var(--text-muted)] opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                     title="Delete playlist"
                   >
                     <Trash2 className="h-4 w-4" />

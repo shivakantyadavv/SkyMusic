@@ -12,12 +12,20 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  Tv,
 } from "lucide-react";
 import { ATMOS_PRESETS } from "../audio/spatialAudio";
 import { AtmosToggleButton } from "../components/AudioControlsBadges";
 import { usePlayer } from "../context/PlayerContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { clearYoutubeCache } from "../services/youtubeResolver";
+import {
+  getTvModePreference,
+  isNativeAndroidTv,
+  setTvModePreference,
+  TvModePreference,
+  useTvMode,
+} from "../utils/tvNavigation";
 import {
   checkForUpdates,
   formatShortVersion,
@@ -71,6 +79,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     clearQueue,
   } = usePlayer();
   const { theme, setTheme } = useTheme();
+  const tvMode = useTvMode();
+  const [tvPref, setTvPref] = useState<TvModePreference>(() => getTvModePreference());
   const [notice, setNotice] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState("1.0.0");
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -301,6 +311,70 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             );
           })}
         </div>
+      </section>
+
+      {/* Android TV & D-Pad Remote Navigation */}
+      <section className="sky-card space-y-3 rounded-2xl p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#6366F1] text-white">
+              <Tv className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
+                TV Remote &amp; D-Pad Mode
+              </h3>
+              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                {isNativeAndroidTv()
+                  ? "Android TV hardware detected — D-Pad focus rings, Back navigation & Media Keys active."
+                  : "Enable 10-foot D-Pad focus rings and arrow-key navigation for TVs & remotes."}
+              </p>
+            </div>
+          </div>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+              tvMode
+                ? "bg-[#1DB954]/20 text-[#1DB954]"
+                : "bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
+            }`}
+          >
+            {tvMode ? "TV Mode Active" : "Standard Mode"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              { id: "auto", label: "Auto Detect" },
+              { id: "on", label: "Force TV Mode" },
+              { id: "off", label: "Touch / Mouse" },
+            ] as const
+          ).map((opt) => {
+            const active = tvPref === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  setTvPref(opt.id);
+                  setTvModePreference(opt.id);
+                }}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                  active
+                    ? "border-[#0EA5E9] bg-[#0EA5E9]/15 text-[#38bdf8]"
+                    : "border-[var(--border-subtle)] bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="text-[11px] text-[var(--text-muted)]">
+          Remote controls: D-Pad moves focus • OK selects or scrubs sliders •
+          Media Play/Next/Prev work globally • Back closes overlays.
+        </p>
       </section>
 
       {/* Local Music Storage */}

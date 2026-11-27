@@ -27,9 +27,14 @@ export interface UpdateInfo {
 
 declare global {
   interface Window {
+    __skymusicHandleBack?: () => boolean;
     SkymusicAndroid?: {
       installApk: (filePath: string) => boolean;
       openUrl: (url: string) => void;
+      isTv?: () => boolean;
+      setKeepScreenOn?: (keepOn: boolean) => void;
+      hasVoiceSearch?: () => boolean;
+      startVoiceSearch?: () => boolean;
       ensureStoragePermissions?: () => void;
       exportToMusicFolder?: (
         sourcePath: string,

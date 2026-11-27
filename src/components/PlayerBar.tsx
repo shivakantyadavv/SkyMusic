@@ -87,7 +87,7 @@ export const PlayerBar: React.FC = () => {
                     alt={currentTrack.album}
                     className="h-11 w-11 rounded-md object-cover shadow-md md:h-14 md:w-14"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="group-focus-reveal absolute inset-0 flex items-center justify-center rounded-md bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
                     <ChevronUp className="h-5 w-5 text-white" />
                   </div>
                 </div>
@@ -233,9 +233,11 @@ export const PlayerBar: React.FC = () => {
               min={0}
               max={duration || 1}
               step={0.5}
+              data-tv-step={10}
               value={currentTime}
               onChange={(e) => seekTo(Number(e.target.value))}
               disabled={!currentTrack}
+              aria-label="Playback position"
               className="sky-range flex-1"
               style={{
                 background: `linear-gradient(to right, var(--accent-primary) ${progressPct}%, var(--range-track-bg) ${progressPct}%)`,
@@ -293,8 +295,10 @@ export const PlayerBar: React.FC = () => {
               min={0}
               max={1}
               step={0.02}
+              data-tv-step={0.05}
               value={isMuted ? 0 : volume}
               onChange={(e) => setVolume(Number(e.target.value))}
+              aria-label="Volume"
               className="sky-range w-24"
               style={{
                 background: `linear-gradient(to right, var(--accent-green) ${volPct}%, var(--range-track-bg) ${volPct}%)`,

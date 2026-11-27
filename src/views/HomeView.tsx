@@ -13,8 +13,13 @@ import {
 import { TrackRow } from "../components/TrackRow";
 import { usePlayer } from "../context/PlayerContext";
 import { fetchHomeCatalog } from "../services/musicApi";
-import { HomeSection } from "../types/music";
+import { HomeSection, Track } from "../types/music";
 import { getTrackBadgeQuality } from "../utils/audioQuality";
+import {
+  onTvCardKeyDown,
+  registerBackHandler,
+  useTvMode,
+} from "../utils/tvNavigation";
 
 export const HomeView: React.FC = () => {
   const {
@@ -28,6 +33,7 @@ export const HomeView: React.FC = () => {
     atmosPreset,
   } = usePlayer();
 
+  const tvMode = useTvMode();
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +41,15 @@ export const HomeView: React.FC = () => {
   const [expandedSectionId, setExpandedSectionId] = useState<string | null>(
     null
   );
+
+  // Allow TV/Android Back button to collapse expanded playlist before navigating away
+  useEffect(() => {
+    if (!expandedSectionId) return;
+    return registerBackHandler(() => {
+      setExpandedSectionId(null);
+      return true;
+    });
+  }, [expandedSectionId]);
 
   const loadCatalog = async () => {
     setLoading(true);
@@ -68,6 +83,62 @@ export const HomeView: React.FC = () => {
     activeFilter === "all"
       ? sections
       : sections.filter((s) => s.id === activeFilter);
+
+  const renderTrackCard = (
+    track: Track,
+    keyId: string,
+    contextTracks: Track[],
+    cardWidthClass?: string
+  ) => {
+    const isCurrent = currentTrack?.id === track.id;
+    const quality =
+      isCurrent && currentTrackQuality
+        ? currentTrackQuality
+        : getTrackBadgeQuality(track, false, atmosPreset, activeStreamKind);
+
+    return (
+      <div
+        key={keyId}
+        role="button"
+        tabIndex={0}
+        onClick={() => playTrack(track, contextTracks)}
+        onKeyDown={(e) => onTvCardKeyDown(e, () => playTrack(track, contextTracks))}
+        className={`sky-card-interactive group cursor-pointer rounded-xl p-3 ${
+          cardWidthClass || ""
+        }`}
+      >
+        <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
+          <img
+            src={track.albumArt}
+            alt={track.album}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div className="absolute left-1.5 top-1.5 rounded-full bg-black/75 backdrop-blur-sm">
+            <QualityBadge quality={quality} compact />
+          </div>
+          {!tvMode && (
+            <div className="group-focus-reveal absolute right-1.5 top-1.5 rounded-full bg-black/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+              <DownloadTrackButton track={track} size="sm" onOverlay />
+            </div>
+          )}
+          <div className="group-focus-reveal absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
+            <Play className="ml-0.5 h-5 w-5 fill-current" />
+          </div>
+        </div>
+        <p
+          className={`truncate text-sm font-semibold ${
+            isCurrent ? "text-[#0EA5E9]" : "text-[var(--text-primary)]"
+          }`}
+        >
+          {track.title}
+        </p>
+        <p className="truncate text-xs text-[var(--text-secondary)]">
+          {track.artist}
+        </p>
+      </div>
+    );
+  };
 
   if (expandedSection) {
     return (
@@ -194,14 +265,19 @@ export const HomeView: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Quick-Pick Compact Suggestion Cards Grid (Spotify Top 6 Grid) */}
+          {/* Quick-Pick Compact Suggestion Cards Grid (Spotify Top Grid) */}
           {activeFilter === "all" && (
             <section>
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
                 {sections.map((sec) => (
                   <div
                     key={sec.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setExpandedSectionId(sec.id)}
+                    onKeyDown={(e) =>
+                      onTvCardKeyDown(e, () => setExpandedSectionId(sec.id))
+                    }
                     className="sky-card-interactive group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg pr-3"
                   >
                     <div
@@ -222,22 +298,31 @@ export const HomeView: React.FC = () => {
                         {sec.tracks.length} tracks
                       </p>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        playTrack(sec.tracks[0], sec.tracks);
-                      }}
-                      className="flex h-9 w-9 shrink-0 translate-y-1 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100"
-                      title={`Play ${sec.title}`}
-                    >
-                      <Play className="ml-0.5 h-4 w-4 fill-current" />
-                    </button>
+                    {!tvMode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playTrack(sec.tracks[0], sec.tracks);
+                        }}
+                        className="group-focus-reveal flex h-9 w-9 shrink-0 translate-y-1 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-lg transition-all group-hover:translate-y-0 group-hover:opacity-100"
+                        title={`Play ${sec.title}`}
+                      >
+                        <Play className="ml-0.5 h-4 w-4 fill-current" />
+                      </button>
+                    )}
                   </div>
                 ))}
 
                 {likedTracks.length > 0 && (
                   <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => playTrack(likedTracks[0], likedTracks)}
+                    onKeyDown={(e) =>
+                      onTvCardKeyDown(e, () =>
+                        playTrack(likedTracks[0], likedTracks)
+                      )
+                    }
                     className="sky-card-interactive group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg pr-3"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-gradient-to-br from-[#0EA5E9] to-[#1DB954]">
@@ -277,57 +362,15 @@ export const HomeView: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                {recentlyPlayed.map((track) => {
-                  const isCurrent = currentTrack?.id === track.id;
-                  const quality =
-                    isCurrent && currentTrackQuality
-                      ? currentTrackQuality
-                      : getTrackBadgeQuality(
-                          track,
-                          false,
-                          atmosPreset,
-                          activeStreamKind
-                        );
-
-                  return (
-                    <div
-                      key={`recent-${track.id}`}
-                      onClick={() => playTrack(track, recentlyPlayed)}
-                      className="sky-card-interactive group w-36 shrink-0 cursor-pointer rounded-xl p-3 sm:w-44"
-                    >
-                      <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
-                        <img
-                          src={track.albumArt}
-                          alt={track.album}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                        <div className="absolute left-1.5 top-1.5 rounded-full bg-black/75 backdrop-blur-sm">
-                          <QualityBadge quality={quality} compact />
-                        </div>
-                        <div className="absolute right-1.5 top-1.5 rounded-full bg-black/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                          <DownloadTrackButton track={track} size="sm" onOverlay />
-                        </div>
-                        <div className="absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
-                          <Play className="ml-0.5 h-5 w-5 fill-current" />
-                        </div>
-                      </div>
-                      <p
-                        className={`truncate text-sm font-semibold ${
-                          isCurrent
-                            ? "text-[#0EA5E9]"
-                            : "text-[var(--text-primary)]"
-                        }`}
-                      >
-                        {track.title}
-                      </p>
-                      <p className="truncate text-xs text-[var(--text-secondary)]">
-                        {track.artist}
-                      </p>
-                    </div>
-                  );
-                })}
+              <div className="flex gap-4 overflow-x-auto pb-2 pt-1">
+                {recentlyPlayed.map((track) =>
+                  renderTrackCard(
+                    track,
+                    `recent-${track.id}`,
+                    recentlyPlayed,
+                    "w-36 shrink-0 sm:w-44"
+                  )
+                )}
               </div>
             </section>
           )}
@@ -349,7 +392,7 @@ export const HomeView: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setExpandedSectionId(sec.id)}
-                  className="inline-flex items-center gap-0.5 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                  className="inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
                   Show all
                   <ChevronRight className="h-4 w-4" />
@@ -357,56 +400,11 @@ export const HomeView: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {sec.tracks.slice(0, 6).map((track) => {
-                  const isCurrent = currentTrack?.id === track.id;
-                  const quality =
-                    isCurrent && currentTrackQuality
-                      ? currentTrackQuality
-                      : getTrackBadgeQuality(
-                          track,
-                          false,
-                          atmosPreset,
-                          activeStreamKind
-                        );
-
-                  return (
-                    <div
-                      key={`${sec.id}-${track.id}`}
-                      onClick={() => playTrack(track, sec.tracks)}
-                      className="sky-card-interactive group cursor-pointer rounded-xl p-3"
-                    >
-                      <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
-                        <img
-                          src={track.albumArt}
-                          alt={track.album}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                        <div className="absolute left-1.5 top-1.5 rounded-full bg-black/75 backdrop-blur-sm">
-                          <QualityBadge quality={quality} compact />
-                        </div>
-                        <div className="absolute right-1.5 top-1.5 rounded-full bg-black/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                          <DownloadTrackButton track={track} size="sm" onOverlay />
-                        </div>
-                        <div className="absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
-                          <Play className="ml-0.5 h-5 w-5 fill-current" />
-                        </div>
-                      </div>
-                      <p
-                        className={`truncate text-sm font-semibold ${
-                          isCurrent
-                            ? "text-[#0EA5E9]"
-                            : "text-[var(--text-primary)]"
-                        }`}
-                      >
-                        {track.title}
-                      </p>
-                      <p className="truncate text-xs text-[var(--text-secondary)]">
-                        {track.artist}
-                      </p>
-                    </div>
-                  );
-                })}
+                {sec.tracks
+                  .slice(0, tvMode ? 4 : 6)
+                  .map((track) =>
+                    renderTrackCard(track, `${sec.id}-${track.id}`, sec.tracks)
+                  )}
               </div>
             </section>
           ))}
