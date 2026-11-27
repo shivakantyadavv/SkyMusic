@@ -18,10 +18,17 @@ import {
 import { usePlayer } from "../context/PlayerContext";
 import { fetchLyrics, LyricsResult } from "../services/lyricsApi";
 import { formatTime } from "../utils/formatTime";
+import {
+  AtmosToggleButton,
+  DownloadTrackButton,
+  QualityBadge,
+} from "./AudioControlsBadges";
 
 export const NowPlayingModal: React.FC = () => {
   const {
     currentTrack,
+    currentTrackQuality,
+    toggleAtmos,
     isPlaying,
     isLoadingAudio,
     currentTime,
@@ -159,6 +166,8 @@ export const NowPlayingModal: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <AtmosToggleButton compact />
+
           <button
             onClick={() => setShowLyrics((prev) => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
@@ -210,8 +219,8 @@ export const NowPlayingModal: React.FC = () => {
                   />
                 </div>
 
-                {/* Title, Artist & Like */}
-                <div className="mt-6 flex items-center justify-between gap-3">
+                {/* Title, Artist, Quality Pill & Actions */}
+                <div className="mt-6 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-2xl">
                       {currentTrack.title}
@@ -219,20 +228,32 @@ export const NowPlayingModal: React.FC = () => {
                     <p className="mt-0.5 truncate text-sm text-[var(--text-secondary)]">
                       {currentTrack.artist}
                     </p>
+                    {currentTrackQuality && (
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <QualityBadge
+                          quality={currentTrackQuality}
+                          interactive
+                          onClick={toggleAtmos}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={() => toggleLike(currentTrack)}
-                    className={`rounded-full p-2.5 transition ${
-                      liked
-                        ? "text-[#1DB954]"
-                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
-                    }`}
-                    title={liked ? "Unlike" : "Like"}
-                  >
-                    <Heart
-                      className={`h-6 w-6 ${liked ? "fill-current" : ""}`}
-                    />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <DownloadTrackButton track={currentTrack} size="md" />
+                    <button
+                      onClick={() => toggleLike(currentTrack)}
+                      className={`rounded-full p-2.5 transition ${
+                        liked
+                          ? "text-[#1DB954]"
+                          : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
+                      }`}
+                      title={liked ? "Unlike" : "Like"}
+                    >
+                      <Heart
+                        className={`h-6 w-6 ${liked ? "fill-current" : ""}`}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

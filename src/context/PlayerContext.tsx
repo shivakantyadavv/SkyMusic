@@ -1,22 +1,47 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { spatialAudio } from "../audio/spatialAudio";
 import { isTauriEnv } from "../services/http";
-import { pickLocalAudioFiles } from "../services/localAudio";
+import {
+  pickLocalAudioFiles,
+  refreshLocalRegistration,
+} from "../services/localAudio";
 import { resolveYoutubeVideoIds } from "../services/youtubeResolver";
-import { Playlist, RepeatMode, Track } from "../types/music";
+import {
+  AtmosPreset,
+  AudioQualityInfo,
+  DownloadedTrackResult,
+  DownloadProgressPayload,
+  Playlist,
+  RepeatMode,
+  Track,
+} from "../types/music";
+import { getTrackBadgeQuality, StreamSourceKind } from "../utils/audioQuality";
 
 type ActiveBackend = "youtube" | "html5" | null;
+
+interface YtPlaybackStreamResult {
+  videoId: string;
+  streamUrl: string;
+  mimeType: string;
+  bitrateKbps: number;
+  sampleRateHz: number;
+}
 
 interface PlayerContextValue {
   // Playback
   currentTrack: Track | null;
+  currentTrackQuality: AudioQualityInfo | null;
+  activeStreamKind: StreamSourceKind;
   isPlaying: boolean;
   isLoadingAudio: boolean;
   audioError: string | null;
@@ -26,6 +51,11 @@ interface PlayerContextValue {
   isMuted: boolean;
   shuffle: boolean;
   repeat: RepeatMode;
+
+  // Dolby Atmos / Spatial Audio
+  atmosPreset: AtmosPreset;
+  setAtmosPreset: (preset: AtmosPreset) => void;
+  toggleAtmos: () => void;
 
   // Queue & Overlay Actions
   queue: Track[];
@@ -46,6 +76,17 @@ interface PlayerContextValue {
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
 
+  // Recently Played
+  recentlyPlayed: Track[];
+  clearRecentlyPlayed: () => void;
+
+  // Downloads
+  downloadedTracks: Track[];
+  downloadTrack: (track: Track) => Promise<void>;
+  removeDownloadedTrack: (trackId: string) => void;
+  isTrackDownloaded: (track: Track) => boolean;
+  getDownloadProgress: (trackId: string) => DownloadProgressPayload | null;
+
   // Library
   likedTracks: Track[];
   toggleLike: (track: Track) => void;
@@ -64,6 +105,9 @@ const PlayerContext = createContext<PlayerContextValue | null>(null);
 const LIKED_KEY = "skymusic_liked_tracks";
 const PLAYLISTS_KEY = "skymusic_playlists";
 const VOLUME_KEY = "skymusic_volume";
+const RECENTLY_PLAYED_KEY = "skymusic_recently_played";
+const ATMOS_PRESET_KEY = "skymusic_atmos_preset";
+const DOWNLOADED_TRACKS_KEY = "skymusic_downloaded_tracks";
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -83,13 +127,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const ytPendingLoadRef = useRef<string | null>(null);
 
   const activeBackendRef = useRef<ActiveBackend>(null);
+  const activeStreamKindRef = useRef<StreamSourceKind>(null);
   const playRequestIdRef = useRef(0);
   const ytCandidatesRef = useRef<string[]>([]);
   const ytCandidateIndexRef = useRef(0);
 
+  const [bridgePort, setBridgePort] = useState<number>(0);
+  const bridgePortRef = useRef<number>(0);
   const [ytBridgeUrl, setYtBridgeUrl] = useState<string | null>(null);
 
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [activeStreamKind, setActiveStreamKind] =
+    useState<StreamSourceKind>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
@@ -102,8 +151,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>("off");
 
+  const [atmosPreset, setAtmosPresetState] = useState<AtmosPreset>(() => {
+    const saved = readJson<string>(ATMOS_PRESET_KEY, "off");
+    return saved === "music" ||
+      saved === "movie" ||
+      saved === "bass" ||
+      saved === "off"
+      ? saved
+      : "off";
+  });
+  const lastActiveAtmosRef = useRef<Exclude<AtmosPreset, "off">>(
+    atmosPreset !== "off" ? atmosPreset : "music"
+  );
+
   const [queue, setQueue] = useState<Track[]>([]);
   const [history, setHistory] = useState<Track[]>([]);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>(() =>
+    readJson<Track[]>(RECENTLY_PLAYED_KEY, [])
+  );
   const [isQueueOpen, setQueueOpen] = useState(false);
   const [isNowPlayingOpen, setNowPlayingOpen] = useState(false);
 
@@ -114,12 +179,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     readJson<Playlist[]>(PLAYLISTS_KEY, [])
   );
   const [localTracks, setLocalTracks] = useState<Track[]>([]);
+  const [downloadedTracks, setDownloadedTracks] = useState<Track[]>(() =>
+    readJson<Track[]>(DOWNLOADED_TRACKS_KEY, [])
+  );
+  const [downloadProgressMap, setDownloadProgressMap] = useState<
+    Record<string, DownloadProgressPayload>
+  >({});
 
   // Refs synced with latest state for event handlers
   const currentTrackRef = useRef<Track | null>(null);
   const repeatRef = useRef<RepeatMode>(repeat);
   const volumeRef = useRef<number>(volume);
   const isMutedRef = useRef<boolean>(isMuted);
+  const atmosPresetRef = useRef<AtmosPreset>(atmosPreset);
+  const downloadedTracksRef = useRef<Track[]>(downloadedTracks);
 
   useEffect(() => {
     currentTrackRef.current = currentTrack;
@@ -134,7 +207,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     isMutedRef.current = isMuted;
   }, [volume, isMuted]);
 
-  // Persist library
+  useEffect(() => {
+    atmosPresetRef.current = atmosPreset;
+    if (atmosPreset !== "off") {
+      lastActiveAtmosRef.current = atmosPreset;
+    }
+    localStorage.setItem(ATMOS_PRESET_KEY, JSON.stringify(atmosPreset));
+    spatialAudio.applyPreset(atmosPreset);
+  }, [atmosPreset]);
+
+  useEffect(() => {
+    downloadedTracksRef.current = downloadedTracks;
+    localStorage.setItem(
+      DOWNLOADED_TRACKS_KEY,
+      JSON.stringify(downloadedTracks)
+    );
+  }, [downloadedTracks]);
+
+  // Persist library & recently played
   useEffect(() => {
     localStorage.setItem(LIKED_KEY, JSON.stringify(likedTracks));
   }, [likedTracks]);
@@ -143,15 +233,31 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(playlists));
   }, [playlists]);
 
-  // Resolve YouTube bridge iframe URL
+  useEffect(() => {
+    localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(recentlyPlayed));
+  }, [recentlyPlayed]);
+
+  // Resolve local HTTP bridge port + rehydrate downloaded files cleanly
   useEffect(() => {
     if (isTauriEnv()) {
       invoke<number>("get_yt_bridge_port")
-        .then((port) => {
+        .then(async (port) => {
+          setBridgePort(port);
+          bridgePortRef.current = port;
           if (port > 0) {
             setYtBridgeUrl(`http://localhost:${port}/yt-player.html`);
           } else {
             setYtBridgeUrl("/yt-player.html");
+          }
+
+          // Re-register persisted downloaded files on the active bridge port
+          const savedDl = readJson<Track[]>(DOWNLOADED_TRACKS_KEY, []);
+          if (savedDl.length > 0) {
+            const refreshed = await Promise.all(
+              savedDl.map((t) => refreshLocalRegistration(t))
+            );
+            const valid = refreshed.filter((t): t is Track => t !== null);
+            setDownloadedTracks(valid);
           }
         })
         .catch(() => {
@@ -160,6 +266,36 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       setYtBridgeUrl("/yt-player.html");
     }
+  }, []);
+
+  // Listen to Rust download progress events
+  useEffect(() => {
+    if (!isTauriEnv()) return;
+    let unlisten: UnlistenFn | null = null;
+    listen<DownloadProgressPayload>("track-download-progress", (ev) => {
+      const payload = ev.payload;
+      setDownloadProgressMap((prev) => ({
+        ...prev,
+        [payload.trackId]: payload,
+      }));
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  const setAtmosPreset = useCallback((preset: AtmosPreset) => {
+    spatialAudio.resume();
+    setAtmosPresetState(preset);
+  }, []);
+
+  const toggleAtmos = useCallback(() => {
+    spatialAudio.resume();
+    setAtmosPresetState((prev) =>
+      prev === "off" ? lastActiveAtmosRef.current || "music" : "off"
+    );
   }, []);
 
   const postToYtBridge = useCallback((payload: Record<string, unknown>) => {
@@ -182,12 +318,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     postToYtBridge({ type: "yt:stop" });
   }, [postToYtBridge]);
 
-  // Initialize HTML5 Audio element (for local files + preview fallback)
+  // Initialize HTML5 Audio element & connect CORS-safe Web Audio Spatial DSP
   useEffect(() => {
     const audio = new Audio();
     audio.preload = "auto";
+    audio.crossOrigin = "anonymous";
     audio.volume = volumeRef.current;
     audioRef.current = audio;
+
+    if (isTauriEnv()) {
+      try {
+        spatialAudio.attach(audio);
+        spatialAudio.applyPreset(atmosPresetRef.current);
+      } catch {
+        // Fallback gracefully if WebAudio init is deferred
+      }
+    }
 
     return () => {
       audio.pause();
@@ -207,48 +353,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [volume, isMuted, postToYtBridge]);
 
-  const playHtml5Fallback = useCallback(
-    async (track: Track, reqId: number) => {
-      const audio = audioRef.current;
-      if (!audio || reqId !== playRequestIdRef.current) return;
+  const recordRecentlyPlayed = useCallback((track: Track) => {
+    setRecentlyPlayed((prev) =>
+      [track, ...prev.filter((t) => t.id !== track.id)].slice(0, 20)
+    );
+  }, []);
 
-      stopYoutubeAudio();
-
-      if (!track.streamUrl) {
-        activeBackendRef.current = null;
-        setIsLoadingAudio(false);
-        setIsPlaying(false);
-        setAudioError("Could not load audio stream for this track.");
-        return;
-      }
-
-      activeBackendRef.current = "html5";
-      try {
-        audio.src = track.streamUrl;
-        audio.volume = isMutedRef.current ? 0 : volumeRef.current;
-        await audio.play();
-        if (reqId === playRequestIdRef.current) {
-          setIsPlaying(true);
-          setIsLoadingAudio(false);
-          setAudioError(null);
-        }
-      } catch (err) {
-        if (reqId === playRequestIdRef.current) {
-          setIsPlaying(false);
-          setIsLoadingAudio(false);
-          setAudioError(
-            err instanceof Error ? err.message : "Failed to play audio."
-          );
-        }
-      }
-    },
-    [stopYoutubeAudio]
-  );
+  const clearRecentlyPlayed = useCallback(() => {
+    setRecentlyPlayed([]);
+  }, []);
 
   const loadYoutubeVideoId = useCallback(
     (videoId: string) => {
       stopHtml5Audio();
       activeBackendRef.current = "youtube";
+      activeStreamKindRef.current = "youtube-iframe";
+      setActiveStreamKind("youtube-iframe");
       if (!ytReadyRef.current) {
         ytPendingLoadRef.current = videoId;
         return;
@@ -263,6 +383,91 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     [postToYtBridge, stopHtml5Audio]
   );
 
+  const playHtml5Url = useCallback(
+    async (
+      url: string | null,
+      kind: StreamSourceKind,
+      reqId: number
+    ): Promise<boolean> => {
+      const audio = audioRef.current;
+      if (!audio || reqId !== playRequestIdRef.current) return false;
+
+      stopYoutubeAudio();
+
+      if (!url) {
+        activeBackendRef.current = null;
+        activeStreamKindRef.current = null;
+        setActiveStreamKind(null);
+        setIsLoadingAudio(false);
+        setIsPlaying(false);
+        setAudioError("Could not load audio stream for this track.");
+        return false;
+      }
+
+      // Proxy HTTPS preview URLs through loopback HTTP when inside Tauri so WebAudio DSP never hits CORS silence
+      let resolvedUrl = url;
+      const port = bridgePortRef.current;
+      if (
+        isTauriEnv() &&
+        port > 0 &&
+        url.startsWith("https://") &&
+        !url.startsWith(`http://127.0.0.1:${port}`)
+      ) {
+        resolvedUrl = `http://127.0.0.1:${port}/proxy?url=${encodeURIComponent(
+          url
+        )}`;
+      }
+
+      const isCorsSafe =
+        !resolvedUrl.startsWith("http") ||
+        resolvedUrl.includes("127.0.0.1") ||
+        resolvedUrl.includes("localhost") ||
+        resolvedUrl.startsWith(window.location.origin);
+
+      if (isCorsSafe) {
+        audio.crossOrigin = "anonymous";
+        try {
+          spatialAudio.attach(audio);
+          spatialAudio.applyPreset(atmosPresetRef.current);
+          await spatialAudio.resume();
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      activeBackendRef.current = "html5";
+      activeStreamKindRef.current = kind;
+      setActiveStreamKind(kind);
+
+      try {
+        audio.src = resolvedUrl;
+        audio.volume = isMutedRef.current ? 0 : volumeRef.current;
+        await audio.play();
+        if (reqId === playRequestIdRef.current) {
+          setIsPlaying(true);
+          setIsLoadingAudio(false);
+          setAudioError(null);
+        }
+        return true;
+      } catch (err) {
+        if (reqId === playRequestIdRef.current) {
+          if (kind === "yt-stream" && ytCandidatesRef.current.length > 0) {
+            // Fall back cleanly to YouTube IFrame Bridge if direct stream failed to play
+            loadYoutubeVideoId(ytCandidatesRef.current[0]);
+            return true;
+          }
+          setIsPlaying(false);
+          setIsLoadingAudio(false);
+          setAudioError(
+            err instanceof Error ? err.message : "Failed to play audio."
+          );
+        }
+        return false;
+      }
+    },
+    [loadYoutubeVideoId, stopYoutubeAudio]
+  );
+
   const playTrackInternal = useCallback(
     async (track: Track) => {
       const reqId = ++playRequestIdRef.current;
@@ -273,6 +478,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTrack(track);
       setCurrentTime(0);
       setDuration(track.duration || 0);
+      recordRecentlyPlayed(track);
 
       // Stop whichever source was previously active
       stopHtml5Audio();
@@ -280,29 +486,79 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       ytCandidatesRef.current = [];
       ytCandidateIndexRef.current = 0;
 
-      // Local audio files play directly via HTML5 Audio
+      // Local files play directly via loopback /local HTTP stream with WebAudio Atmos DSP
       if (track.source === "local") {
-        await playHtml5Fallback(track, reqId);
+        const refreshed = track.localPath
+          ? (await refreshLocalRegistration(track)) || track
+          : track;
+        if (reqId !== playRequestIdRef.current) return;
+        await playHtml5Url(refreshed.streamUrl, "local", reqId);
         return;
       }
 
-      // Online tracks: resolve full-length YouTube video IDs first
-      const candidates = await resolveYoutubeVideoIds(
-        track.title,
-        track.artist
-      );
+      // Check if an offline downloaded HQ version is saved
+      const offlineHit =
+        track.source === "downloaded"
+          ? track
+          : downloadedTracksRef.current.find(
+              (d) =>
+                d.id === track.id ||
+                (d.title.toLowerCase() === track.title.toLowerCase() &&
+                  d.artist.toLowerCase() === track.artist.toLowerCase())
+            );
+
+      if (offlineHit && offlineHit.localPath) {
+        const refreshed =
+          (await refreshLocalRegistration(offlineHit)) || offlineHit;
+        if (reqId !== playRequestIdRef.current) return;
+        setCurrentTrack({
+          ...track,
+          ...refreshed,
+          quality: refreshed.quality,
+        });
+        await playHtml5Url(refreshed.streamUrl, "downloaded", reqId);
+        return;
+      }
+
+      // Online tracks: resolve YouTube video IDs
+      const candidates = await resolveYoutubeVideoIds(track.title, track.artist);
       if (reqId !== playRequestIdRef.current) return;
 
       if (candidates.length > 0) {
         ytCandidatesRef.current = candidates;
         ytCandidateIndexRef.current = 0;
+
+        // First try direct loopback /stream proxy so Dolby Atmos Spatial WebAudio DSP processes online music!
+        if (isTauriEnv()) {
+          try {
+            const direct = await invoke<YtPlaybackStreamResult | null>(
+              "resolve_yt_playback_url",
+              { videoIds: candidates }
+            );
+            if (reqId !== playRequestIdRef.current) return;
+            if (direct?.streamUrl) {
+              const ok = await playHtml5Url(direct.streamUrl, "yt-stream", reqId);
+              if (ok) return;
+            }
+          } catch {
+            // Fall through cleanly to YouTube IFrame Bridge
+          }
+        }
+
+        if (reqId !== playRequestIdRef.current) return;
         loadYoutubeVideoId(candidates[0]);
       } else {
-        // Fallback to Deezer/iTunes preview URL if no YouTube candidates found
-        await playHtml5Fallback(track, reqId);
+        // Fallback to Deezer/iTunes preview URL via /proxy
+        await playHtml5Url(track.streamUrl, "preview", reqId);
       }
     },
-    [loadYoutubeVideoId, playHtml5Fallback, stopHtml5Audio, stopYoutubeAudio]
+    [
+      loadYoutubeVideoId,
+      playHtml5Url,
+      recordRecentlyPlayed,
+      stopHtml5Audio,
+      stopYoutubeAudio,
+    ]
   );
 
   const playTrack = useCallback(
@@ -451,19 +707,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         if (state === 1) {
-          // PLAYING
           setIsPlaying(true);
           setIsLoadingAudio(false);
           setAudioError(null);
         } else if (state === 2) {
-          // PAUSED
           setIsPlaying(false);
           setIsLoadingAudio(false);
         } else if (state === 3) {
-          // BUFFERING
           setIsLoadingAudio(true);
         } else if (state === 0) {
-          // ENDED
           setIsLoadingAudio(false);
           playNextRef.current();
         }
@@ -476,14 +728,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           ytCandidateIndexRef.current = nextIdx;
           loadYoutubeVideoId(ytCandidatesRef.current[nextIdx]);
         } else if (currentTrackRef.current) {
-          playHtml5Fallback(currentTrackRef.current, playRequestIdRef.current);
+          playHtml5Url(
+            currentTrackRef.current.streamUrl,
+            "preview",
+            playRequestIdRef.current
+          );
         }
       }
     };
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [loadYoutubeVideoId, playHtml5Fallback, postToYtBridge]);
+  }, [loadYoutubeVideoId, playHtml5Url, postToYtBridge]);
 
   // Bind HTML5 audio events
   useEffect(() => {
@@ -510,10 +766,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
     const onPlay = () => {
-      if (activeBackendRef.current === "html5") setIsPlaying(true);
+      if (activeBackendRef.current === "html5") {
+        setIsPlaying(true);
+        setIsLoadingAudio(false);
+      }
     };
     const onPause = () => {
       if (activeBackendRef.current === "html5") setIsPlaying(false);
+    };
+    const onWaiting = () => {
+      if (activeBackendRef.current === "html5") setIsLoadingAudio(true);
+    };
+    const onCanPlay = () => {
+      if (activeBackendRef.current === "html5") setIsLoadingAudio(false);
+    };
+    const onError = () => {
+      if (activeBackendRef.current !== "html5") return;
+      if (
+        activeStreamKindRef.current === "yt-stream" &&
+        ytCandidatesRef.current.length > 0
+      ) {
+        loadYoutubeVideoId(ytCandidatesRef.current[0]);
+      }
     };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
@@ -521,6 +795,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("error", onError);
 
     return () => {
       audio.removeEventListener("timeupdate", onTimeUpdate);
@@ -528,8 +805,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("error", onError);
     };
-  }, []);
+  }, [loadYoutubeVideoId]);
 
   const togglePlay = useCallback(() => {
     if (!currentTrack) return;
@@ -546,6 +826,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const audio = audioRef.current;
     if (!audio) return;
+    spatialAudio.resume();
     if (isPlaying) {
       audio.pause();
     } else {
@@ -596,6 +877,138 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const clearQueue = useCallback(() => {
     setQueue([]);
+  }, []);
+
+  // Offline HQ Downloader
+  const isTrackDownloaded = useCallback(
+    (track: Track) =>
+      track.source === "downloaded" ||
+      downloadedTracks.some(
+        (d) =>
+          d.id === track.id ||
+          (d.title.toLowerCase() === track.title.toLowerCase() &&
+            d.artist.toLowerCase() === track.artist.toLowerCase())
+      ),
+    [downloadedTracks]
+  );
+
+  const getDownloadProgress = useCallback(
+    (trackId: string) => downloadProgressMap[trackId] || null,
+    [downloadProgressMap]
+  );
+
+  const downloadTrack = useCallback(async (track: Track) => {
+    if (!isTauriEnv()) {
+      setAudioError(
+        "Offline HQ downloads are supported in the Skymusic Windows & Android app."
+      );
+      return;
+    }
+
+    const existing = downloadProgressMap[track.id];
+    if (
+      existing &&
+      (existing.status === "resolving" ||
+        existing.status === "downloading" ||
+        existing.status === "tagging")
+    ) {
+      return;
+    }
+
+    setDownloadProgressMap((prev) => ({
+      ...prev,
+      [track.id]: {
+        trackId: track.id,
+        progress: 2,
+        status: "resolving",
+      },
+    }));
+
+    try {
+      const result = await invoke<DownloadedTrackResult>("download_track_hq", {
+        trackId: track.id,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        albumArt: track.albumArt,
+        previewUrl: track.streamUrl,
+      });
+
+      // Mirror into public Android Music/Skymusic folder via MediaStore
+      try {
+        window.SkymusicAndroid?.exportToMusicFolder?.(
+          result.filePath,
+          result.fileName,
+          result.mimeType,
+          track.title,
+          track.artist,
+          track.album
+        );
+      } catch {
+        // Non-Android / already stored in native Music/Skymusic on Desktop
+      }
+
+      const offlineTrack: Track = {
+        ...track,
+        source: "downloaded",
+        localPath: result.filePath,
+        fileName: result.fileName,
+        streamUrl: result.localStreamUrl,
+        duration: result.duration > 0 ? result.duration : track.duration,
+        downloadedAt: Date.now(),
+        quality: result.quality,
+      };
+
+      setDownloadedTracks((prev) => [
+        offlineTrack,
+        ...prev.filter((d) => d.id !== offlineTrack.id),
+      ]);
+
+      if (currentTrackRef.current?.id === track.id) {
+        setCurrentTrack((prev) =>
+          prev
+            ? {
+                ...prev,
+                localPath: result.filePath,
+                fileName: result.fileName,
+                downloadedAt: offlineTrack.downloadedAt,
+                quality: result.quality,
+              }
+            : prev
+        );
+      }
+
+      setDownloadProgressMap((prev) => ({
+        ...prev,
+        [track.id]: {
+          trackId: track.id,
+          progress: 100,
+          status: "completed",
+        },
+      }));
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to download track.";
+      setDownloadProgressMap((prev) => ({
+        ...prev,
+        [track.id]: {
+          trackId: track.id,
+          progress: 0,
+          status: "error",
+          error: msg,
+        },
+      }));
+      setAudioError(msg);
+    }
+  }, [downloadProgressMap]);
+
+  const removeDownloadedTrack = useCallback((trackId: string) => {
+    setDownloadedTracks((prev) => prev.filter((t) => t.id !== trackId));
+    setDownloadProgressMap((prev) => {
+      const next = { ...prev };
+      delete next[trackId];
+      return next;
+    });
   }, []);
 
   const isLiked = useCallback(
@@ -660,10 +1073,20 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const currentTrackQuality = useMemo(() => {
+    if (!currentTrack) return null;
+    return getTrackBadgeQuality(currentTrack, true, atmosPreset, activeStreamKind);
+  }, [activeStreamKind, atmosPreset, currentTrack]);
+
+  // Keep bridgePort referenced silently in case future callers need it
+  void bridgePort;
+
   return (
     <PlayerContext.Provider
       value={{
         currentTrack,
+        currentTrackQuality,
+        activeStreamKind,
         isPlaying,
         isLoadingAudio,
         audioError,
@@ -673,6 +1096,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         isMuted,
         shuffle,
         repeat,
+        atmosPreset,
+        setAtmosPreset,
+        toggleAtmos,
         queue,
         isQueueOpen,
         setQueueOpen,
@@ -690,6 +1116,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         addToQueue,
         removeFromQueue,
         clearQueue,
+        recentlyPlayed,
+        clearRecentlyPlayed,
+        downloadedTracks,
+        downloadTrack,
+        removeDownloadedTrack,
+        isTrackDownloaded,
+        getDownloadProgress,
         likedTracks,
         toggleLike,
         isLiked,
@@ -704,7 +1137,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     >
       {children}
 
-      {/* Hidden 1x1 YouTube IFrame Audio Bridge */}
+      {/* Hidden 1x1 YouTube IFrame Audio Bridge (fallback when needed) */}
       {ytBridgeUrl && (
         <div
           aria-hidden="true"

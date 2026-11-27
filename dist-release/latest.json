@@ -1,0 +1,11 @@
+{
+  "version": "1.2.0",
+  "notes": "Skymusic v1.2 - Dolby Atmos spatial audio, HQ downloader, audio quality badges, recently played shelf.",
+  "pub_date": "2026-11-27T08:19:44.964Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXc5VVFqSVFva2MwTUFlbk1CWmd4VEczWURxamMyYkR4a1k5MWl2emZnRkE1bjhwbzBQMmEvK042bVg1M0JaeHUrQlV4Z090cjFlQU5JbTcvOXkra1FZPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1NzY3MTA1CWZpbGU6U2t5bXVzaWNfMS4yLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuMi4wCmYydUg3YzBtakVpZU92bVpQaWpTQnBLcThyeWh1OW1vWVFUZFkzd256a3FLUnZDL1NxVWpqbjFtTEVaRDNxblp2cDNTWWlRMHE3SzBJekVmZ01VZENBPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.2/skymusic_v1.2_x64-setup.exe"
+    }
+  }
+}

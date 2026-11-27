@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { formatTime } from "../utils/formatTime";
+import { AtmosToggleButton, QualityBadge } from "./AudioControlsBadges";
 
 export const PlayerBar: React.FC = () => {
   const {
     currentTrack,
+    currentTrackQuality,
     isPlaying,
     isLoadingAudio,
     audioError,
@@ -90,12 +92,17 @@ export const PlayerBar: React.FC = () => {
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p
-                    className="truncate text-sm font-semibold transition-colors group-hover:text-[#0EA5E9]"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {currentTrack.title}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p
+                      className="truncate text-sm font-semibold transition-colors group-hover:text-[#0EA5E9]"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {currentTrack.title}
+                    </p>
+                    {currentTrackQuality && (
+                      <QualityBadge quality={currentTrackQuality} compact />
+                    )}
+                  </div>
                   <p
                     className="truncate text-xs"
                     style={{ color: "var(--text-secondary)" }}
@@ -245,8 +252,11 @@ export const PlayerBar: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Queue & Volume */}
+        {/* Right: Dolby Atmos, Queue & Volume */}
         <div className="flex items-center justify-end gap-2 md:w-1/4">
+          <div className="hidden sm:inline-flex">
+            <AtmosToggleButton compact />
+          </div>
           <button
             onClick={() => setQueueOpen(!isQueueOpen)}
             className="relative rounded-full p-2 transition-colors"

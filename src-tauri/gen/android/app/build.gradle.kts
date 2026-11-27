@@ -29,8 +29,8 @@ android {
         applicationId = "com.skymusic.app"
         minSdk = 24
         targetSdk = 37
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1001000").toInt()
-        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.1.0")
+        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1002000").toInt()
+        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.2.0")
     }
 
     signingConfigs {

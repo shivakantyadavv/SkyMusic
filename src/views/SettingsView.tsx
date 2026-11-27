@@ -13,6 +13,8 @@ import {
   Sun,
   Trash2,
 } from "lucide-react";
+import { ATMOS_PRESETS } from "../audio/spatialAudio";
+import { AtmosToggleButton } from "../components/AudioControlsBadges";
 import { usePlayer } from "../context/PlayerContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { clearYoutubeCache } from "../services/youtubeResolver";
@@ -58,8 +60,16 @@ const THEME_OPTIONS: ThemeOption[] = [
 export const SettingsView: React.FC<SettingsViewProps> = ({
   onUpdateFound,
 }) => {
-  const { likedTracks, playlists, localTracks, importLocalTracks, clearQueue } =
-    usePlayer();
+  const {
+    likedTracks,
+    downloadedTracks,
+    playlists,
+    localTracks,
+    atmosPreset,
+    setAtmosPreset,
+    importLocalTracks,
+    clearQueue,
+  } = usePlayer();
   const { theme, setTheme } = useTheme();
   const [notice, setNotice] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState("1.0.0");
@@ -239,22 +249,57 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </section>
 
-      {/* Audio Engine Info */}
-      <section className="sky-card rounded-2xl p-5">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] text-white">
-            <Music2 className="h-5 w-5" />
+      {/* Audio Engine & Dolby Atmos Spatial DSP */}
+      <section className="sky-card space-y-4 rounded-2xl p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] text-white">
+              <Music2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
+                Audio Playback &amp; Dolby Atmos Spatial DSP
+              </h3>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                Real-time Web Audio HRTF stereo widening, studio convolver,
+                multi-band EQ, and soft dynamics leveling for online streams,
+                downloads, and local files.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-[var(--text-primary)]">
-              Full-Length Audio Playback
-            </h3>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
-              Skymusic automatically matches searched songs to full-length audio
-              streams via the YouTube IFrame Player with seamless preview
-              fallback if a specific video cannot be embedded.
-            </p>
-          </div>
+          <AtmosToggleButton />
+        </div>
+
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {ATMOS_PRESETS.map((preset) => {
+            const active = atmosPreset === preset.id;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => setAtmosPreset(preset.id)}
+                className={`flex items-start justify-between gap-2 rounded-xl border p-3 text-left transition ${
+                  active
+                    ? "border-[#0EA5E9] bg-[#0EA5E9]/12 ring-1 ring-[#0EA5E9]/40"
+                    : "border-[var(--border-subtle)] bg-[var(--bg-input)] hover:border-[#0EA5E9]/45 hover:bg-[var(--bg-subtle-hover)]"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[var(--text-primary)]">
+                    {preset.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+                    {preset.description}
+                  </p>
+                </div>
+                {active && (
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#0EA5E9] text-white">
+                    <Check className="h-2.5 w-2.5 stroke-[3]" />
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -285,13 +330,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <h3 className="mb-3 text-base font-bold text-[var(--text-primary)]">
           Storage &amp; Cache
         </h3>
-        <div className="mb-4 grid grid-cols-3 gap-3">
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3 text-center">
             <p className="text-lg font-bold text-[var(--text-primary)]">
               {likedTracks.length}
             </p>
             <p className="text-[11px] text-[var(--text-secondary)]">
               Liked Songs
+            </p>
+          </div>
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3 text-center">
+            <p className="text-lg font-bold text-[var(--text-primary)]">
+              {downloadedTracks.length}
+            </p>
+            <p className="text-[11px] text-[var(--text-secondary)]">
+              Downloaded
             </p>
           </div>
           <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3 text-center">

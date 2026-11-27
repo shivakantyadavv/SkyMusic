@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { Heart, ListPlus, Pause, Play, Plus } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { Track } from "../types/music";
+import { getTrackBadgeQuality } from "../utils/audioQuality";
 import { formatTime } from "../utils/formatTime";
+import { DownloadTrackButton, QualityBadge } from "./AudioControlsBadges";
 
 interface TrackRowProps {
   track: Track;
@@ -17,6 +19,9 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 }) => {
   const {
     currentTrack,
+    currentTrackQuality,
+    activeStreamKind,
+    atmosPreset,
     isPlaying,
     playTrack,
     togglePlay,
@@ -31,6 +36,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   const isCurrent = currentTrack?.id === track.id;
   const liked = isLiked(track.id);
+  const badgeQuality =
+    isCurrent && currentTrackQuality
+      ? currentTrackQuality
+      : getTrackBadgeQuality(track, false, atmosPreset, activeStreamKind);
 
   const handlePlay = () => {
     if (isCurrent) {
@@ -73,13 +82,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
       {/* Title & Artist */}
       <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
-        <p
-          className={`truncate text-sm font-medium ${
-            isCurrent ? "text-[#0EA5E9]" : "text-[var(--text-primary)]"
-          }`}
-        >
-          {track.title}
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p
+            className={`truncate text-sm font-medium ${
+              isCurrent ? "text-[#0EA5E9]" : "text-[var(--text-primary)]"
+            }`}
+          >
+            {track.title}
+          </p>
+          <QualityBadge quality={badgeQuality} compact />
+        </div>
         <p className="truncate text-xs text-[var(--text-secondary)]">
           {track.artist}
           <span className="hidden sm:inline"> • {track.album}</span>
@@ -88,6 +100,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
       {/* Actions */}
       <div className="flex items-center gap-1">
+        <DownloadTrackButton track={track} size="sm" />
+
         <button
           onClick={() => toggleLike(track)}
           className={`rounded-full p-1.5 transition-colors ${

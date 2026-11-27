@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Download,
   FolderOpen,
   Heart,
   ListMusic,
@@ -10,11 +11,13 @@ import {
 import { TrackRow } from "../components/TrackRow";
 import { usePlayer } from "../context/PlayerContext";
 
-type LibraryTab = "liked" | "playlists" | "local";
+type LibraryTab = "liked" | "downloaded" | "playlists" | "local";
 
 export const LibraryView: React.FC = () => {
   const {
     likedTracks,
+    downloadedTracks,
+    removeDownloadedTrack,
     playlists,
     createPlaylist,
     deletePlaylist,
@@ -47,13 +50,13 @@ export const LibraryView: React.FC = () => {
           Your Library
         </h2>
 
-        <div className="sky-card flex items-center gap-2 rounded-full p-1">
+        <div className="sky-card flex flex-wrap items-center gap-1.5 rounded-full p-1">
           <button
             onClick={() => {
               setTab("liked");
               setSelectedPlaylistId(null);
             }}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               tab === "liked"
                 ? "bg-[#0EA5E9] text-white shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -62,8 +65,21 @@ export const LibraryView: React.FC = () => {
             Liked ({likedTracks.length})
           </button>
           <button
+            onClick={() => {
+              setTab("downloaded");
+              setSelectedPlaylistId(null);
+            }}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+              tab === "downloaded"
+                ? "bg-[#1DB954] text-black shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            Downloaded ({downloadedTracks.length})
+          </button>
+          <button
             onClick={() => setTab("playlists")}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               tab === "playlists"
                 ? "bg-[#0EA5E9] text-white shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -76,7 +92,7 @@ export const LibraryView: React.FC = () => {
               setTab("local");
               setSelectedPlaylistId(null);
             }}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               tab === "local"
                 ? "bg-[#0EA5E9] text-white shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -255,6 +271,65 @@ export const LibraryView: React.FC = () => {
                     }}
                     className="rounded p-1.5 text-[var(--text-muted)] opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                     title="Delete playlist"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Downloaded Offline Library */}
+      {tab === "downloaded" && (
+        <section>
+          <div className="mb-4 flex items-center justify-between rounded-2xl border border-[var(--border-subtle)] bg-gradient-to-r from-[#1DB954]/25 to-[#0EA5E9]/20 p-5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#1DB954] to-[#0EA5E9] shadow-lg">
+                <Download className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                  Downloaded Offline Songs
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {downloadedTracks.length} high-quality tracks saved in
+                  Music/Skymusic
+                </p>
+              </div>
+            </div>
+            {downloadedTracks.length > 0 && (
+              <button
+                onClick={() => playTrack(downloadedTracks[0], downloadedTracks)}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1DB954] text-black shadow-lg transition hover:scale-105"
+                title="Play Downloaded Songs"
+              >
+                <Play className="ml-0.5 h-5 w-5 fill-current" />
+              </button>
+            )}
+          </div>
+
+          {downloadedTracks.length === 0 ? (
+            <div className="sky-card rounded-xl p-10 text-center text-sm text-[var(--text-secondary)]">
+              No downloaded songs yet. Tap the Download icon on any track to
+              save HQ offline audio.
+            </div>
+          ) : (
+            <div className="sky-card rounded-xl p-2">
+              {downloadedTracks.map((track, idx) => (
+                <div key={track.id} className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <TrackRow
+                      track={track}
+                      index={idx}
+                      contextList={downloadedTracks}
+                    />
+                  </div>
+                  <button
+                    onClick={() => removeDownloadedTrack(track.id)}
+                    className="mr-2 rounded p-1.5 text-[var(--text-muted)] transition hover:text-red-500"
+                    title="Remove from offline library"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

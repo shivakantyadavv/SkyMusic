@@ -6,13 +6,27 @@ import {
   Play,
   RefreshCw,
 } from "lucide-react";
+import {
+  DownloadTrackButton,
+  QualityBadge,
+} from "../components/AudioControlsBadges";
 import { TrackRow } from "../components/TrackRow";
 import { usePlayer } from "../context/PlayerContext";
 import { fetchHomeCatalog } from "../services/musicApi";
 import { HomeSection } from "../types/music";
+import { getTrackBadgeQuality } from "../utils/audioQuality";
 
 export const HomeView: React.FC = () => {
-  const { playTrack, likedTracks } = usePlayer();
+  const {
+    playTrack,
+    likedTracks,
+    recentlyPlayed,
+    clearRecentlyPlayed,
+    currentTrack,
+    currentTrackQuality,
+    activeStreamKind,
+    atmosPreset,
+  } = usePlayer();
 
   const [sections, setSections] = useState<HomeSection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -243,6 +257,81 @@ export const HomeView: React.FC = () => {
             </section>
           )}
 
+          {/* Horizontal Recently Played Row (right above Top Trending) */}
+          {activeFilter === "all" && recentlyPlayed.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-end justify-between">
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                    Recently Played
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    Jump back into your latest tracks
+                  </p>
+                </div>
+                <button
+                  onClick={clearRecentlyPlayed}
+                  className="rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] transition hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {recentlyPlayed.map((track) => {
+                  const isCurrent = currentTrack?.id === track.id;
+                  const quality =
+                    isCurrent && currentTrackQuality
+                      ? currentTrackQuality
+                      : getTrackBadgeQuality(
+                          track,
+                          false,
+                          atmosPreset,
+                          activeStreamKind
+                        );
+
+                  return (
+                    <div
+                      key={`recent-${track.id}`}
+                      onClick={() => playTrack(track, recentlyPlayed)}
+                      className="sky-card-interactive group w-36 shrink-0 cursor-pointer rounded-xl p-3 sm:w-44"
+                    >
+                      <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
+                        <img
+                          src={track.albumArt}
+                          alt={track.album}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute left-1.5 top-1.5 rounded-full bg-black/75 backdrop-blur-sm">
+                          <QualityBadge quality={quality} compact />
+                        </div>
+                        <div className="absolute right-1.5 top-1.5 rounded-full bg-black/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                          <DownloadTrackButton track={track} size="sm" onOverlay />
+                        </div>
+                        <div className="absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
+                          <Play className="ml-0.5 h-5 w-5 fill-current" />
+                        </div>
+                      </div>
+                      <p
+                        className={`truncate text-sm font-semibold ${
+                          isCurrent
+                            ? "text-[#0EA5E9]"
+                            : "text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {track.title}
+                      </p>
+                      <p className="truncate text-xs text-[var(--text-secondary)]">
+                        {track.artist}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {/* Spotify-Style Suggestion Card Shelves */}
           {visibleSections.map((sec) => (
             <section key={sec.id} className="space-y-3">
@@ -268,31 +357,56 @@ export const HomeView: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {sec.tracks.slice(0, 6).map((track) => (
-                  <div
-                    key={`${sec.id}-${track.id}`}
-                    onClick={() => playTrack(track, sec.tracks)}
-                    className="sky-card-interactive group cursor-pointer rounded-xl p-3"
-                  >
-                    <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
-                      <img
-                        src={track.albumArt}
-                        alt={track.album}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                      <div className="absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
-                        <Play className="ml-0.5 h-5 w-5 fill-current" />
+                {sec.tracks.slice(0, 6).map((track) => {
+                  const isCurrent = currentTrack?.id === track.id;
+                  const quality =
+                    isCurrent && currentTrackQuality
+                      ? currentTrackQuality
+                      : getTrackBadgeQuality(
+                          track,
+                          false,
+                          atmosPreset,
+                          activeStreamKind
+                        );
+
+                  return (
+                    <div
+                      key={`${sec.id}-${track.id}`}
+                      onClick={() => playTrack(track, sec.tracks)}
+                      className="sky-card-interactive group cursor-pointer rounded-xl p-3"
+                    >
+                      <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
+                        <img
+                          src={track.albumArt}
+                          alt={track.album}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <div className="absolute left-1.5 top-1.5 rounded-full bg-black/75 backdrop-blur-sm">
+                          <QualityBadge quality={quality} compact />
+                        </div>
+                        <div className="absolute right-1.5 top-1.5 rounded-full bg-black/70 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                          <DownloadTrackButton track={track} size="sm" onOverlay />
+                        </div>
+                        <div className="absolute bottom-2 right-2 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[#1DB954] text-black opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
+                          <Play className="ml-0.5 h-5 w-5 fill-current" />
+                        </div>
                       </div>
+                      <p
+                        className={`truncate text-sm font-semibold ${
+                          isCurrent
+                            ? "text-[#0EA5E9]"
+                            : "text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {track.title}
+                      </p>
+                      <p className="truncate text-xs text-[var(--text-secondary)]">
+                        {track.artist}
+                      </p>
                     </div>
-                    <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-                      {track.title}
-                    </p>
-                    <p className="truncate text-xs text-[var(--text-secondary)]">
-                      {track.artist}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           ))}

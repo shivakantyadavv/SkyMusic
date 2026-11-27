@@ -2,6 +2,14 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.2] - 2026-11-27
+
+### What's New
+- **Dolby Atmos / Spatial 3D Audio Engine** — 4 DSP presets (Auto/Music, Movie/3D, Bass Boost, Off) using Web Audio API binaural widener, Haas delay matrix, multi-band EQ, and dynamics compressor; toggleable from Settings, PlayerBar, and Now Playing
+- **High-Quality Song Downloader** — One-tap download with real-time circular progress ring; resolves full-bitrate M4A via InnerTube with lofty metadata embedding; saves to `Music/Skymusic` on Windows & Android; dedicated Downloaded tab in Your Library
+- **Live Audio Quality & Codec Badges** — Rust symphonia+lofty inspection for local files (FLAC 24-bit, WAV, MP3 320kbps); stream badges for online playback (HQ 256kbps, DOLBY ATMOS Spatial, 128kbps Preview); displayed on track rows, PlayerBar, and Now Playing
+- **Recently Played shelf** — Horizontal scrollable row above Top Trending on Home (top 20 unique tracks, most-recent first, with Clear button; hidden when empty)
+
 ## [v1.1] - 2026-11-27
 
 ### What's New

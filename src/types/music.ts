@@ -1,5 +1,22 @@
 export type RepeatMode = "off" | "all" | "one";
 export type NavTab = "home" | "search" | "library" | "settings";
+export type AtmosPreset = "music" | "movie" | "bass" | "off";
+export type AudioQualityTier =
+  | "lossless"
+  | "atmos"
+  | "hq"
+  | "preview"
+  | "unknown";
+
+export interface AudioQualityInfo {
+  badge: string;
+  detail: string;
+  codec?: string;
+  bitrateKbps?: number;
+  sampleRateHz?: number;
+  bitDepth?: number;
+  tier: AudioQualityTier;
+}
 
 export interface Track {
   id: string;
@@ -9,8 +26,30 @@ export interface Track {
   albumArt: string;
   duration: number; // seconds
   streamUrl: string | null; // preview fallback URL or local file URL
-  source: "deezer" | "itunes" | "local";
+  source: "deezer" | "itunes" | "local" | "downloaded";
   externalUrl?: string;
+  localPath?: string;
+  fileName?: string;
+  downloadedAt?: number;
+  quality?: AudioQualityInfo;
+  ytVideoId?: string;
+}
+
+export interface DownloadProgressPayload {
+  trackId: string;
+  progress: number;
+  status: "resolving" | "downloading" | "tagging" | "completed" | "error";
+  error?: string;
+}
+
+export interface DownloadedTrackResult {
+  trackId: string;
+  filePath: string;
+  fileName: string;
+  localStreamUrl: string;
+  mimeType: string;
+  quality: AudioQualityInfo;
+  duration: number;
 }
 
 export interface ArtistItem {

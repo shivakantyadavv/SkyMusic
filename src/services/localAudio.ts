@@ -1,10 +1,18 @@
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Track } from "../types/music";
+import { AudioQualityInfo, Track } from "../types/music";
 import { isTauriEnv } from "./http";
 
 const DEFAULT_LOCAL_ART =
   "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&q=80";
+
+interface LocalAudioRegistration {
+  id: string;
+  filePath: string;
+  streamUrl: string;
+  duration: number;
+  quality: AudioQualityInfo;
+}
 
 function parseFileName(fileName: string): { title: string; artist: string } {
   const withoutExt = fileName.replace(/\.[^/.]+$/, "");
@@ -35,8 +43,60 @@ function probeDuration(url: string): Promise<number> {
   });
 }
 
+function fallbackQualityFromName(fileName: string): AudioQualityInfo {
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+  if (ext === "flac") {
+    return {
+      badge: "LOSSLESS",
+      detail: "FLAC • Lossless",
+      codec: "FLAC",
+      tier: "lossless",
+    };
+  }
+  if (ext === "wav") {
+    return {
+      badge: "LOSSLESS",
+      detail: "WAV • Lossless",
+      codec: "WAV",
+      tier: "lossless",
+    };
+  }
+  return {
+    badge: ext ? ext.toUpperCase() : "AUDIO",
+    detail: ext ? `${ext.toUpperCase()} • Local Audio` : "Local Audio",
+    codec: ext ? ext.toUpperCase() : undefined,
+    tier: "hq",
+  };
+}
+
+export async function refreshLocalRegistration(
+  track: Track
+): Promise<Track | null> {
+  if (!track.localPath || !isTauriEnv()) return track;
+  try {
+    const reg = await invoke<LocalAudioRegistration>("register_local_audio", {
+      path: track.localPath,
+      isDownloadedHq: track.source === "downloaded",
+    });
+    return {
+      ...track,
+      streamUrl: reg.streamUrl,
+      duration: reg.duration > 0 ? reg.duration : track.duration,
+      quality: reg.quality,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function pickLocalAudioFiles(): Promise<Track[]> {
   if (isTauriEnv()) {
+    try {
+      window.SkymusicAndroid?.ensureStoragePermissions?.();
+    } catch {
+      // Ignore permission bridge error outside Android
+    }
+
     const selected = await open({
       multiple: true,
       filters: [
@@ -54,18 +114,47 @@ export async function pickLocalAudioFiles(): Promise<Track[]> {
       paths.map(async (filePath) => {
         const fileName = filePath.split(/[/\\]/).pop() || "Unknown Track";
         const { title, artist } = parseFileName(fileName);
-        const streamUrl = convertFileSrc(filePath);
-        const duration = await probeDuration(streamUrl);
-        return {
-          id: `local-${filePath}-${Date.now()}`,
-          title,
-          artist,
-          album: "Local Storage",
-          albumArt: DEFAULT_LOCAL_ART,
-          duration,
-          streamUrl,
-          source: "local" as const,
-        };
+
+        try {
+          const reg = await invoke<LocalAudioRegistration>(
+            "register_local_audio",
+            {
+              path: filePath,
+              isDownloadedHq: false,
+            }
+          );
+          const duration =
+            reg.duration > 0 ? reg.duration : await probeDuration(reg.streamUrl);
+          return {
+            id: `local-${filePath}-${Date.now()}`,
+            title,
+            artist,
+            album: "Local Storage",
+            albumArt: DEFAULT_LOCAL_ART,
+            duration,
+            streamUrl: reg.streamUrl,
+            source: "local" as const,
+            localPath: filePath,
+            fileName,
+            quality: reg.quality,
+          };
+        } catch {
+          const streamUrl = convertFileSrc(filePath);
+          const duration = await probeDuration(streamUrl);
+          return {
+            id: `local-${filePath}-${Date.now()}`,
+            title,
+            artist,
+            album: "Local Storage",
+            albumArt: DEFAULT_LOCAL_ART,
+            duration,
+            streamUrl,
+            source: "local" as const,
+            localPath: filePath,
+            fileName,
+            quality: fallbackQualityFromName(fileName),
+          };
+        }
       })
     );
 
@@ -94,6 +183,8 @@ export async function pickLocalAudioFiles(): Promise<Track[]> {
             duration,
             streamUrl,
             source: "local" as const,
+            fileName: file.name,
+            quality: fallbackQualityFromName(file.name),
           };
         })
       );

@@ -30,6 +30,15 @@ declare global {
     SkymusicAndroid?: {
       installApk: (filePath: string) => boolean;
       openUrl: (url: string) => void;
+      ensureStoragePermissions?: () => void;
+      exportToMusicFolder?: (
+        sourcePath: string,
+        displayName: string,
+        mimeType: string,
+        title: string,
+        artist: string,
+        album: string
+      ) => boolean;
     };
   }
 }
