@@ -3,9 +3,10 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.0-0EA5E9?style=flat-square) — Released on **2026-11-27**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.1-0EA5E9?style=flat-square) — Released on **2026-11-27**
 
-- Initial public release with full-length music streaming, curated regional & global charts, synced lyrics, and local audio playback.
+- Added Appearance & Theme selector in Settings with live switching across Dark Mode, Light Mode, and Glass Effect (Glassmorphism)
+- Refactored all views, modals, lyrics overlay, and player controls to semantic CSS theme variables with persistent storage
 <!-- LATEST_VERSION_END -->
 
 ---

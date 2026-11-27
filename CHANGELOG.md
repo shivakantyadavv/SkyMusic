@@ -2,6 +2,12 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.1] - 2026-11-27
+
+### What's New
+- Added Appearance & Theme selector in Settings with live switching across Dark Mode, Light Mode, and Glass Effect (Glassmorphism)
+- Refactored all views, modals, lyrics overlay, and player controls to semantic CSS theme variables with persistent storage
+
 ## [v1.0] - 2026-11-27
 
 ### What's New

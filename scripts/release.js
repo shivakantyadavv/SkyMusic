@@ -242,14 +242,20 @@ async function main() {
       }
 
       // 1. Build Windows executable + NSIS installer + .sig
+      fs.rmSync(path.join(targetBase, "release", "bundle"), {
+        recursive: true,
+        force: true,
+      });
       runCmd("npm run tauri build", { env });
 
       const releaseDir = path.join(targetBase, "release");
       const nsisDir = path.join(releaseDir, "bundle", "nsis");
 
-      const setupExe = findFirstFile(nsisDir, (_, name) =>
-        name.endsWith("-setup.exe")
-      );
+      const setupExe =
+        findFirstFile(
+          nsisDir,
+          (_, name) => name.includes(next.semver) && name.endsWith("-setup.exe")
+        ) || findFirstFile(nsisDir, (_, name) => name.endsWith("-setup.exe"));
       const setupSig = setupExe ? `${setupExe}.sig` : null;
 
       const portableExe = path.join(releaseDir, "skymusic.exe");
@@ -429,7 +435,7 @@ async function main() {
 
   if (!opts.skipPush) {
     runCmd(
-      "git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/gen/android/app/tauri.properties src-tauri/gen/android/app/build.gradle.kts CHANGELOG.md README.md"
+      "git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/gen/android/app/build.gradle.kts CHANGELOG.md README.md scripts/release.js"
     );
     runCmd(`git commit -m "chore(release): ${next.tag}"`);
     runCmd(`git tag -a ${next.tag} -m "Release ${next.tag}"`);
