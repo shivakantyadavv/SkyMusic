@@ -79,20 +79,26 @@ export const SearchView: React.FC = () => {
     <div className="space-y-6 pb-8">
       {/* Search Bar */}
       <div className="relative max-w-2xl">
-        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
+        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text-secondary)]" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="What do you want to play?"
-          className="w-full rounded-full border border-white/10 bg-[#181818] py-3 pl-12 pr-4 text-sm text-white placeholder-zinc-400 outline-none transition focus:border-[#0EA5E9] focus:bg-[#242424]"
+          className="w-full rounded-full border border-[var(--border-subtle)] bg-[var(--bg-input)] py-3 pl-12 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] shadow-sm outline-none transition focus:border-[#0EA5E9] focus:bg-[var(--bg-card-hover)]"
+          style={{
+            backdropFilter: "var(--backdrop-blur)",
+            WebkitBackdropFilter: "var(--backdrop-blur)",
+          }}
         />
       </div>
 
       {/* Browse Category Cards when search box is empty */}
       {!query.trim() && (
         <section>
-          <h3 className="mb-4 text-lg font-bold text-white">Browse All</h3>
+          <h3 className="mb-4 text-lg font-bold text-[var(--text-primary)]">
+            Browse All
+          </h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {BROWSE_CARDS.map((card) => (
               <button
@@ -116,7 +122,7 @@ export const SearchView: React.FC = () => {
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-4 text-sm font-medium text-red-500">
           {error}
         </div>
       )}
@@ -124,8 +130,10 @@ export const SearchView: React.FC = () => {
       {/* Songs */}
       {!loading && results.tracks.length > 0 && (
         <section>
-          <h3 className="mb-3 text-lg font-bold text-white">Songs</h3>
-          <div className="rounded-xl bg-[#181818] p-2">
+          <h3 className="mb-3 text-lg font-bold text-[var(--text-primary)]">
+            Songs
+          </h3>
+          <div className="sky-card rounded-xl p-2">
             {results.tracks.map((track, idx) => (
               <TrackRow
                 key={track.id}
@@ -141,13 +149,15 @@ export const SearchView: React.FC = () => {
       {/* Artists */}
       {!loading && results.artists.length > 0 && (
         <section>
-          <h3 className="mb-3 text-lg font-bold text-white">Artists</h3>
+          <h3 className="mb-3 text-lg font-bold text-[var(--text-primary)]">
+            Artists
+          </h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
             {results.artists.map((artist) => (
               <button
                 key={artist.id}
                 onClick={() => setQuery(artist.name)}
-                className="rounded-xl bg-[#181818] p-3 text-center transition hover:bg-[#242424]"
+                className="sky-card-interactive rounded-xl p-3 text-center"
               >
                 <img
                   src={artist.image}
@@ -155,10 +165,10 @@ export const SearchView: React.FC = () => {
                   className="mx-auto mb-2.5 aspect-square w-24 rounded-full object-cover shadow"
                   loading="lazy"
                 />
-                <p className="truncate text-sm font-semibold text-white">
+                <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
                   {artist.name}
                 </p>
-                <p className="text-xs text-zinc-400">Artist</p>
+                <p className="text-xs text-[var(--text-secondary)]">Artist</p>
               </button>
             ))}
           </div>
@@ -168,13 +178,15 @@ export const SearchView: React.FC = () => {
       {/* Albums */}
       {!loading && results.albums.length > 0 && (
         <section>
-          <h3 className="mb-3 text-lg font-bold text-white">Albums</h3>
+          <h3 className="mb-3 text-lg font-bold text-[var(--text-primary)]">
+            Albums
+          </h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {results.albums.map((album) => (
               <button
                 key={album.id}
                 onClick={() => setQuery(`${album.title} ${album.artist}`)}
-                className="rounded-xl bg-[#181818] p-3 text-left transition hover:bg-[#242424]"
+                className="sky-card-interactive rounded-xl p-3 text-left"
               >
                 <img
                   src={album.image}
@@ -182,10 +194,12 @@ export const SearchView: React.FC = () => {
                   className="mb-2.5 aspect-square w-full rounded-lg object-cover shadow"
                   loading="lazy"
                 />
-                <p className="truncate text-sm font-semibold text-white">
+                <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
                   {album.title}
                 </p>
-                <p className="truncate text-xs text-zinc-400">{album.artist}</p>
+                <p className="truncate text-xs text-[var(--text-secondary)]">
+                  {album.artist}
+                </p>
               </button>
             ))}
           </div>
@@ -197,7 +211,7 @@ export const SearchView: React.FC = () => {
         !error &&
         results.tracks.length === 0 &&
         results.artists.length === 0 && (
-          <p className="py-12 text-center text-sm text-zinc-400">
+          <p className="py-12 text-center text-sm text-[var(--text-secondary)]">
             No results found for "{query}".
           </p>
         )}

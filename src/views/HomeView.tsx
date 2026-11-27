@@ -60,7 +60,7 @@ export const HomeView: React.FC = () => {
       <div className="space-y-6 pb-8">
         <button
           onClick={() => setExpandedSectionId(null)}
-          className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Home
@@ -97,7 +97,7 @@ export const HomeView: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-xl bg-[#181818] p-2">
+        <div className="sky-card rounded-xl p-2">
           {expandedSection.tracks.map((track, idx) => (
             <TrackRow
               key={track.id}
@@ -116,12 +116,12 @@ export const HomeView: React.FC = () => {
       {/* Top Greeting + Category Filter Chips (Spotify Style) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-extrabold tracking-tight text-white md:text-3xl">
+          <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-3xl">
             {greeting()}
           </h2>
           <button
             onClick={loadCatalog}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
             title="Refresh Home"
           >
             <RefreshCw
@@ -137,8 +137,8 @@ export const HomeView: React.FC = () => {
             onClick={() => setActiveFilter("all")}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               activeFilter === "all"
-                ? "bg-white text-black"
-                : "bg-[#242424] text-zinc-200 hover:bg-[#323232]"
+                ? "bg-[var(--chip-active-bg)] text-[var(--chip-active-fg)] shadow-sm"
+                : "border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
             }`}
           >
             All
@@ -149,8 +149,8 @@ export const HomeView: React.FC = () => {
               onClick={() => setActiveFilter(sec.id)}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                 activeFilter === sec.id
-                  ? "bg-[#1DB954] text-black"
-                  : "bg-[#242424] text-zinc-200 hover:bg-[#323232]"
+                  ? "bg-[#1DB954] text-black shadow-sm"
+                  : "border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
               }`}
             >
               {sec.title}
@@ -160,16 +160,16 @@ export const HomeView: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center rounded-2xl bg-[#181818]">
+        <div className="sky-card flex h-64 items-center justify-center rounded-2xl">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-[#0EA5E9]" />
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[var(--text-secondary)]">
               Loading Bollywood, Hollywood, Punjabi &amp; Global Charts...
             </p>
           </div>
         </div>
       ) : error ? (
-        <div className="rounded-xl bg-[#181818] p-6 text-center text-sm text-zinc-400">
+        <div className="sky-card rounded-xl p-6 text-center text-sm text-[var(--text-secondary)]">
           <p>{error}</p>
           <button
             onClick={loadCatalog}
@@ -188,7 +188,7 @@ export const HomeView: React.FC = () => {
                   <div
                     key={sec.id}
                     onClick={() => setExpandedSectionId(sec.id)}
-                    className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-[#242424]/75 pr-3 transition-colors hover:bg-[#323232]"
+                    className="sky-card-interactive group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg pr-3"
                   >
                     <div
                       className={`relative h-14 w-14 shrink-0 bg-gradient-to-br ${sec.gradient}`}
@@ -201,10 +201,10 @@ export const HomeView: React.FC = () => {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-white">
+                      <p className="truncate text-sm font-bold text-[var(--text-primary)]">
                         {sec.title}
                       </p>
-                      <p className="truncate text-[11px] text-zinc-400">
+                      <p className="truncate text-[11px] text-[var(--text-secondary)]">
                         {sec.tracks.length} tracks
                       </p>
                     </div>
@@ -224,16 +224,16 @@ export const HomeView: React.FC = () => {
                 {likedTracks.length > 0 && (
                   <div
                     onClick={() => playTrack(likedTracks[0], likedTracks)}
-                    className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-[#242424]/75 pr-3 transition-colors hover:bg-[#323232]"
+                    className="sky-card-interactive group flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg pr-3"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-gradient-to-br from-[#0EA5E9] to-[#1DB954]">
                       <Play className="h-6 w-6 fill-white text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-white">
+                      <p className="truncate text-sm font-bold text-[var(--text-primary)]">
                         Liked Songs
                       </p>
-                      <p className="truncate text-[11px] text-zinc-400">
+                      <p className="truncate text-[11px] text-[var(--text-secondary)]">
                         {likedTracks.length} saved songs
                       </p>
                     </div>
@@ -250,15 +250,17 @@ export const HomeView: React.FC = () => {
                 <div>
                   <h3
                     onClick={() => setExpandedSectionId(sec.id)}
-                    className="cursor-pointer text-xl font-bold tracking-tight text-white hover:underline"
+                    className="cursor-pointer text-xl font-bold tracking-tight text-[var(--text-primary)] hover:underline"
                   >
                     {sec.title}
                   </h3>
-                  <p className="text-xs text-zinc-400">{sec.subtitle}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {sec.subtitle}
+                  </p>
                 </div>
                 <button
                   onClick={() => setExpandedSectionId(sec.id)}
-                  className="inline-flex items-center gap-0.5 text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-white"
+                  className="inline-flex items-center gap-0.5 text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
                   Show all
                   <ChevronRight className="h-4 w-4" />
@@ -270,7 +272,7 @@ export const HomeView: React.FC = () => {
                   <div
                     key={`${sec.id}-${track.id}`}
                     onClick={() => playTrack(track, sec.tracks)}
-                    className="group cursor-pointer rounded-xl bg-[#181818] p-3 transition-all hover:bg-[#242424]"
+                    className="sky-card-interactive group cursor-pointer rounded-xl p-3"
                   >
                     <div className="relative mb-3 aspect-square overflow-hidden rounded-lg shadow-lg">
                       <img
@@ -283,10 +285,10 @@ export const HomeView: React.FC = () => {
                         <Play className="ml-0.5 h-5 w-5 fill-current" />
                       </div>
                     </div>
-                    <p className="truncate text-sm font-semibold text-white">
+                    <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
                       {track.title}
                     </p>
-                    <p className="truncate text-xs text-zinc-400">
+                    <p className="truncate text-xs text-[var(--text-secondary)]">
                       {track.artist}
                     </p>
                   </div>

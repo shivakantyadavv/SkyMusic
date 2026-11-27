@@ -43,9 +43,11 @@ export const LibraryView: React.FC = () => {
   return (
     <div className="space-y-6 pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-white">Your Library</h2>
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+          Your Library
+        </h2>
 
-        <div className="flex items-center gap-2 rounded-full bg-[#181818] p-1">
+        <div className="sky-card flex items-center gap-2 rounded-full p-1">
           <button
             onClick={() => {
               setTab("liked");
@@ -53,8 +55,8 @@ export const LibraryView: React.FC = () => {
             }}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               tab === "liked"
-                ? "bg-[#0EA5E9] text-white"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-[#0EA5E9] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             Liked ({likedTracks.length})
@@ -63,8 +65,8 @@ export const LibraryView: React.FC = () => {
             onClick={() => setTab("playlists")}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               tab === "playlists"
-                ? "bg-[#0EA5E9] text-white"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-[#0EA5E9] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             Playlists ({playlists.length})
@@ -76,8 +78,8 @@ export const LibraryView: React.FC = () => {
             }}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               tab === "local"
-                ? "bg-[#0EA5E9] text-white"
-                : "text-zinc-400 hover:text-white"
+                ? "bg-[#0EA5E9] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             Local Files ({localTracks.length})
@@ -88,14 +90,16 @@ export const LibraryView: React.FC = () => {
       {/* Liked Songs */}
       {tab === "liked" && (
         <section>
-          <div className="mb-4 flex items-center justify-between rounded-2xl bg-gradient-to-r from-[#0EA5E9]/30 to-[#1DB954]/20 p-5">
+          <div className="mb-4 flex items-center justify-between rounded-2xl border border-[var(--border-subtle)] bg-gradient-to-r from-[#0EA5E9]/25 to-[#1DB954]/20 p-5">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] shadow-lg">
                 <Heart className="h-7 w-7 fill-white text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Liked Songs</h3>
-                <p className="text-xs text-zinc-300">
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                  Liked Songs
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
                   {likedTracks.length} tracks saved locally
                 </p>
               </div>
@@ -112,11 +116,11 @@ export const LibraryView: React.FC = () => {
           </div>
 
           {likedTracks.length === 0 ? (
-            <div className="rounded-xl bg-[#181818] p-10 text-center text-sm text-zinc-400">
+            <div className="sky-card rounded-xl p-10 text-center text-sm text-[var(--text-secondary)]">
               Tap the heart icon on any track to save it here.
             </div>
           ) : (
-            <div className="rounded-xl bg-[#181818] p-2">
+            <div className="sky-card rounded-xl p-2">
               {likedTracks.map((track, idx) => (
                 <TrackRow
                   key={track.id}
@@ -142,7 +146,7 @@ export const LibraryView: React.FC = () => {
               value={newPlName}
               onChange={(e) => setNewPlName(e.target.value)}
               placeholder="New playlist name..."
-              className="flex-1 max-w-sm rounded-lg border border-white/10 bg-[#181818] px-3.5 py-2 text-sm text-white placeholder-zinc-500 outline-none focus:border-[#0EA5E9]"
+              className="flex-1 max-w-sm rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3.5 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none transition focus:border-[#0EA5E9]"
             />
             <button
               type="submit"
@@ -155,7 +159,7 @@ export const LibraryView: React.FC = () => {
 
           {activePlaylist ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-xl bg-[#181818] p-4">
+              <div className="sky-card flex items-center justify-between rounded-xl p-4">
                 <div>
                   <button
                     onClick={() => setSelectedPlaylistId(null)}
@@ -163,10 +167,10 @@ export const LibraryView: React.FC = () => {
                   >
                     &larr; All Playlists
                   </button>
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className="text-xl font-bold text-[var(--text-primary)]">
                     {activePlaylist.name}
                   </h3>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     {activePlaylist.tracks.length} tracks
                   </p>
                 </div>
@@ -183,11 +187,11 @@ export const LibraryView: React.FC = () => {
               </div>
 
               {activePlaylist.tracks.length === 0 ? (
-                <p className="rounded-xl bg-[#181818] p-8 text-center text-sm text-zinc-400">
+                <p className="sky-card rounded-xl p-8 text-center text-sm text-[var(--text-secondary)]">
                   This playlist is empty. Click "+" on any track to add it!
                 </p>
               ) : (
-                <div className="rounded-xl bg-[#181818] p-2">
+                <div className="sky-card rounded-xl p-2">
                   {activePlaylist.tracks.map((track, idx) => (
                     <div key={track.id} className="flex items-center gap-2">
                       <div className="flex-1">
@@ -201,7 +205,7 @@ export const LibraryView: React.FC = () => {
                         onClick={() =>
                           removeTrackFromPlaylist(activePlaylist.id, track.id)
                         }
-                        className="mr-2 rounded p-1.5 text-zinc-500 hover:text-red-400"
+                        className="mr-2 rounded p-1.5 text-[var(--text-muted)] transition hover:text-red-500"
                         title="Remove from playlist"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -212,7 +216,7 @@ export const LibraryView: React.FC = () => {
               )}
             </div>
           ) : playlists.length === 0 ? (
-            <div className="rounded-xl bg-[#181818] p-10 text-center text-sm text-zinc-400">
+            <div className="sky-card rounded-xl p-10 text-center text-sm text-[var(--text-secondary)]">
               No playlists yet. Create one above!
             </div>
           ) : (
@@ -221,7 +225,7 @@ export const LibraryView: React.FC = () => {
                 <div
                   key={pl.id}
                   onClick={() => setSelectedPlaylistId(pl.id)}
-                  className="group flex cursor-pointer items-center justify-between rounded-xl bg-[#181818] p-4 transition hover:bg-[#242424]"
+                  className="sky-card-interactive group flex cursor-pointer items-center justify-between rounded-xl p-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     {pl.coverImage ? (
@@ -231,15 +235,15 @@ export const LibraryView: React.FC = () => {
                         className="h-12 w-12 rounded-lg object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#242424] text-zinc-400">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bg-subtle)] text-[var(--text-secondary)]">
                         <ListMusic className="h-6 w-6" />
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-white">
+                      <p className="truncate font-semibold text-[var(--text-primary)]">
                         {pl.name}
                       </p>
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-[var(--text-secondary)]">
                         {pl.tracks.length} tracks
                       </p>
                     </div>
@@ -249,7 +253,7 @@ export const LibraryView: React.FC = () => {
                       e.stopPropagation();
                       deletePlaylist(pl.id);
                     }}
-                    className="rounded p-1.5 text-zinc-500 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
+                    className="rounded p-1.5 text-[var(--text-muted)] opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                     title="Delete playlist"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -264,12 +268,12 @@ export const LibraryView: React.FC = () => {
       {/* Local Audio Files */}
       {tab === "local" && (
         <section className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#181818] p-5">
+          <div className="sky-card flex flex-wrap items-center justify-between gap-3 rounded-xl p-5">
             <div>
-              <h3 className="text-base font-bold text-white">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
                 Local Music Storage
               </h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Select .mp3, .flac, .wav, .ogg, or .m4a files from your Windows
                 PC or Android device.
               </p>
@@ -284,12 +288,12 @@ export const LibraryView: React.FC = () => {
           </div>
 
           {localTracks.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center text-sm text-zinc-400">
+            <div className="sky-card rounded-xl border border-dashed border-[var(--border-subtle)] p-10 text-center text-sm text-[var(--text-secondary)]">
               No local audio files loaded yet. Click "Add Audio Files" above to
               browse your storage.
             </div>
           ) : (
-            <div className="rounded-xl bg-[#181818] p-2">
+            <div className="sky-card rounded-xl p-2">
               {localTracks.map((track, idx) => (
                 <TrackRow
                   key={track.id}

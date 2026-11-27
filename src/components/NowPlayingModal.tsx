@@ -118,7 +118,7 @@ export const NowPlayingModal: React.FC = () => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#121212] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+      className={`fixed inset-0 z-50 flex flex-col overflow-hidden bg-[var(--bg-app)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
         isNowPlayingOpen && currentTrack
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-full opacity-0 pointer-events-none"
@@ -132,7 +132,10 @@ export const NowPlayingModal: React.FC = () => {
             alt=""
             className="h-full w-full scale-125 object-cover opacity-25 blur-3xl"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#121212]/80 to-[#121212]" />
+          <div
+            className="absolute inset-0"
+            style={{ background: "var(--np-overlay)" }}
+          />
         </div>
       )}
 
@@ -140,17 +143,17 @@ export const NowPlayingModal: React.FC = () => {
       <header className="relative z-10 flex shrink-0 items-center justify-between px-4 py-4 md:px-8">
         <button
           onClick={() => setNowPlayingOpen(false)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
           title="Minimize"
         >
           <ChevronDown className="h-6 w-6" />
         </button>
 
         <div className="min-w-0 px-3 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
             Now Playing
           </p>
-          <p className="truncate text-xs font-medium text-zinc-200">
+          <p className="truncate text-xs font-medium text-[var(--text-primary)]">
             {currentTrack?.album || "Skymusic"}
           </p>
         </div>
@@ -161,7 +164,7 @@ export const NowPlayingModal: React.FC = () => {
             className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
               showLyrics
                 ? "bg-[#0EA5E9] text-white shadow-lg shadow-[#0EA5E9]/30"
-                : "bg-white/10 text-zinc-200 hover:bg-white/20"
+                : "border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
             }`}
             title="Toggle Lyrics"
           >
@@ -174,7 +177,7 @@ export const NowPlayingModal: React.FC = () => {
               setNowPlayingOpen(false);
               setQueueOpen(true);
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-zinc-200 transition hover:bg-white/20"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
             title="Open Queue"
           >
             <ListMusic className="h-4 w-4" />
@@ -197,7 +200,7 @@ export const NowPlayingModal: React.FC = () => {
               }`}
             >
               <div className="w-full max-w-xs sm:max-w-sm">
-                <div className="aspect-square w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/60 ring-1 ring-white/10">
+                <div className="aspect-square w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-[var(--border-subtle)]">
                   <img
                     src={currentTrack.albumArt}
                     alt={currentTrack.album}
@@ -210,10 +213,10 @@ export const NowPlayingModal: React.FC = () => {
                 {/* Title, Artist & Like */}
                 <div className="mt-6 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-xl font-extrabold tracking-tight text-white md:text-2xl">
+                    <h2 className="truncate text-xl font-extrabold tracking-tight text-[var(--text-primary)] md:text-2xl">
                       {currentTrack.title}
                     </h2>
-                    <p className="mt-0.5 truncate text-sm text-zinc-300">
+                    <p className="mt-0.5 truncate text-sm text-[var(--text-secondary)]">
                       {currentTrack.artist}
                     </p>
                   </div>
@@ -222,7 +225,7 @@ export const NowPlayingModal: React.FC = () => {
                     className={`rounded-full p-2.5 transition ${
                       liked
                         ? "text-[#1DB954]"
-                        : "text-zinc-400 hover:bg-white/10 hover:text-white"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
                     }`}
                     title={liked ? "Unlike" : "Like"}
                   >
@@ -236,13 +239,20 @@ export const NowPlayingModal: React.FC = () => {
 
             {/* Right / Full-Screen Lyrics Panel */}
             {showLyrics && (
-              <div className="flex h-full min-h-0 flex-col rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur-md md:p-6">
-                <div className="mb-3 flex shrink-0 items-center justify-between border-b border-white/10 pb-3">
+              <div
+                className="flex h-full min-h-0 flex-col rounded-2xl border border-[var(--border-subtle)] p-4 shadow-xl md:p-6"
+                style={{
+                  backgroundColor: "var(--np-lyrics-bg)",
+                  backdropFilter: "var(--backdrop-blur)",
+                  WebkitBackdropFilter: "var(--backdrop-blur)",
+                }}
+              >
+                <div className="mb-3 flex shrink-0 items-center justify-between border-b border-[var(--border-subtle)] pb-3">
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-bold text-white">
+                    <h3 className="truncate text-sm font-bold text-[var(--text-primary)]">
                       Lyrics • {currentTrack.title}
                     </h3>
-                    <p className="truncate text-xs text-zinc-400">
+                    <p className="truncate text-xs text-[var(--text-secondary)]">
                       {currentTrack.artist}
                     </p>
                   </div>
@@ -255,16 +265,16 @@ export const NowPlayingModal: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto pr-2">
                   {loadingLyrics ? (
-                    <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-zinc-400">
+                    <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-[var(--text-secondary)]">
                       <Loader2 className="h-7 w-7 animate-spin text-[#0EA5E9]" />
                       <p className="text-xs">Fetching lyrics...</p>
                     </div>
                   ) : !lyricsData || lyricsData.lines.length === 0 ? (
                     <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 text-center">
-                      <p className="text-sm font-semibold text-zinc-300">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
                         Lyrics not available for this track
                       </p>
-                      <p className="max-w-xs text-xs text-zinc-500">
+                      <p className="max-w-xs text-xs text-[var(--text-secondary)]">
                         Enjoy the music! Some regional or newly released tracks
                         do not have lyrics indexed yet.
                       </p>
@@ -290,16 +300,16 @@ export const NowPlayingModal: React.FC = () => {
                             disabled={line.time === null}
                             className={`block w-full text-left text-lg font-bold leading-relaxed transition-all duration-300 md:text-2xl ${
                               line.time !== null
-                                ? "cursor-pointer hover:text-white"
+                                ? "cursor-pointer hover:text-[var(--text-primary)]"
                                 : "cursor-default"
                             } ${
                               isActive
-                                ? "scale-[1.01] text-white"
+                                ? "scale-[1.01] text-[var(--text-primary)]"
                                 : isPast
-                                ? "text-white/35"
+                                ? "text-[var(--lyric-past)]"
                                 : lyricsData.synced
-                                ? "text-white/55"
-                                : "text-zinc-200"
+                                ? "text-[var(--lyric-upcoming)]"
+                                : "text-[var(--text-primary)] opacity-85"
                             }`}
                           >
                             {line.text}
@@ -325,17 +335,19 @@ export const NowPlayingModal: React.FC = () => {
                     className="h-10 w-10 rounded-md object-cover"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-white">
+                    <p className="truncate text-sm font-bold text-[var(--text-primary)]">
                       {currentTrack.title}
                     </p>
-                    <p className="truncate text-xs text-zinc-400">
+                    <p className="truncate text-xs text-[var(--text-secondary)]">
                       {currentTrack.artist}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => toggleLike(currentTrack)}
-                  className={`p-2 ${liked ? "text-[#1DB954]" : "text-zinc-400"}`}
+                  className={`p-2 ${
+                    liked ? "text-[#1DB954]" : "text-[var(--text-secondary)]"
+                  }`}
                 >
                   <Heart
                     className={`h-5 w-5 ${liked ? "fill-current" : ""}`}
@@ -355,12 +367,12 @@ export const NowPlayingModal: React.FC = () => {
                 onChange={(e) => seekTo(Number(e.target.value))}
                 className="sky-range w-full"
                 style={{
-                  background: `linear-gradient(to right, #0EA5E9 ${progressPct}%, rgba(255,255,255,0.2) ${progressPct}%)`,
+                  background: `linear-gradient(to right, #0EA5E9 ${progressPct}%, var(--range-track-bg) ${progressPct}%)`,
                   height: "5px",
                   borderRadius: "9999px",
                 }}
               />
-              <div className="flex justify-between text-xs tabular-nums text-zinc-400">
+              <div className="flex justify-between text-xs tabular-nums text-[var(--text-secondary)]">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
@@ -371,7 +383,9 @@ export const NowPlayingModal: React.FC = () => {
               <button
                 onClick={toggleShuffle}
                 className={`rounded-full p-2 transition ${
-                  shuffle ? "text-[#0EA5E9]" : "text-zinc-400 hover:text-white"
+                  shuffle
+                    ? "text-[#0EA5E9]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
                 title="Shuffle"
               >
@@ -381,7 +395,7 @@ export const NowPlayingModal: React.FC = () => {
               <div className="flex items-center gap-5">
                 <button
                   onClick={playPrev}
-                  className="rounded-full p-2 text-zinc-200 transition hover:scale-105 hover:text-white"
+                  className="rounded-full p-2 text-[var(--text-primary)] opacity-85 transition hover:scale-105 hover:opacity-100"
                   title="Previous"
                 >
                   <SkipBack className="h-7 w-7 fill-current" />
@@ -390,7 +404,7 @@ export const NowPlayingModal: React.FC = () => {
                 <button
                   onClick={togglePlay}
                   disabled={isLoadingAudio}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-black shadow-xl transition hover:scale-105 disabled:opacity-50"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--play-btn-bg)] text-[var(--play-btn-fg)] shadow-xl transition hover:scale-105 disabled:opacity-50"
                   title={isPlaying ? "Pause" : "Play"}
                 >
                   {isLoadingAudio ? (
@@ -404,7 +418,7 @@ export const NowPlayingModal: React.FC = () => {
 
                 <button
                   onClick={playNext}
-                  className="rounded-full p-2 text-zinc-200 transition hover:scale-105 hover:text-white"
+                  className="rounded-full p-2 text-[var(--text-primary)] opacity-85 transition hover:scale-105 hover:opacity-100"
                   title="Next"
                 >
                   <SkipForward className="h-7 w-7 fill-current" />
@@ -416,7 +430,7 @@ export const NowPlayingModal: React.FC = () => {
                 className={`rounded-full p-2 transition ${
                   repeat !== "off"
                     ? "text-[#1DB954]"
-                    : "text-zinc-400 hover:text-white"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
                 title={`Repeat: ${repeat}`}
               >
@@ -432,7 +446,7 @@ export const NowPlayingModal: React.FC = () => {
             <div className="hidden items-center justify-center gap-2 pt-1 md:flex">
               <button
                 onClick={toggleMute}
-                className="p-1 text-zinc-400 hover:text-white"
+                className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
                 {isMuted || volume === 0 ? (
                   <VolumeX className="h-4 w-4" />
@@ -449,7 +463,7 @@ export const NowPlayingModal: React.FC = () => {
                 onChange={(e) => setVolume(Number(e.target.value))}
                 className="sky-range w-32"
                 style={{
-                  background: `linear-gradient(to right, #1DB954 ${volPct}%, rgba(255,255,255,0.2) ${volPct}%)`,
+                  background: `linear-gradient(to right, #1DB954 ${volPct}%, var(--range-track-bg) ${volPct}%)`,
                   height: "4px",
                   borderRadius: "9999px",
                 }}

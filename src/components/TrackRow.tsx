@@ -42,14 +42,14 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   return (
     <div
-      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[#242424] ${
-        isCurrent ? "bg-[#242424]/80" : ""
+      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[var(--bg-card-hover)] ${
+        isCurrent ? "bg-[var(--bg-card-hover)]" : ""
       }`}
     >
       {/* Index / Play button */}
       <button
         onClick={handlePlay}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm text-zinc-400 hover:text-white"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         aria-label={isCurrent && isPlaying ? "Pause" : "Play"}
       >
         {isCurrent && isPlaying ? (
@@ -57,7 +57,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         ) : (
           <>
             <span className="group-hover:hidden">{index + 1}</span>
-            <Play className="hidden h-4 w-4 fill-current text-white group-hover:block" />
+            <Play className="hidden h-4 w-4 fill-current text-[var(--text-primary)] group-hover:block" />
           </>
         )}
       </button>
@@ -75,12 +75,12 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       <div className="min-w-0 flex-1 cursor-pointer" onClick={handlePlay}>
         <p
           className={`truncate text-sm font-medium ${
-            isCurrent ? "text-[#0EA5E9]" : "text-white"
+            isCurrent ? "text-[#0EA5E9]" : "text-[var(--text-primary)]"
           }`}
         >
           {track.title}
         </p>
-        <p className="truncate text-xs text-zinc-400">
+        <p className="truncate text-xs text-[var(--text-secondary)]">
           {track.artist}
           <span className="hidden sm:inline"> • {track.album}</span>
         </p>
@@ -93,7 +93,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           className={`rounded-full p-1.5 transition-colors ${
             liked
               ? "text-[#1DB954]"
-              : "text-zinc-400 opacity-70 hover:text-white group-hover:opacity-100"
+              : "text-[var(--text-secondary)] opacity-70 hover:text-[var(--text-primary)] group-hover:opacity-100"
           }`}
           title={liked ? "Remove from Liked" : "Save to Liked"}
         >
@@ -102,7 +102,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
         <button
           onClick={() => addToQueue(track)}
-          className="hidden rounded-full p-1.5 text-zinc-400 opacity-0 transition-opacity hover:text-white group-hover:opacity-100 sm:inline-flex"
+          className="hidden rounded-full p-1.5 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-[var(--text-primary)] group-hover:opacity-100 sm:inline-flex"
           title="Add to Queue"
         >
           <ListPlus className="h-4 w-4" />
@@ -112,17 +112,17 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowMenu((prev) => !prev)}
-              className="rounded-full p-1.5 text-zinc-400 opacity-70 hover:text-white group-hover:opacity-100"
+              className="rounded-full p-1.5 text-[var(--text-secondary)] opacity-70 hover:text-[var(--text-primary)] group-hover:opacity-100"
               title="Add to Playlist"
             >
               <Plus className="h-4 w-4" />
             </button>
             {showMenu && (
               <div
-                className="absolute right-0 top-8 z-30 w-44 rounded-lg border border-white/10 bg-[#1E1E1E] py-1 shadow-xl"
+                className="sky-surface-strong absolute right-0 top-8 z-30 w-44 rounded-lg border border-[var(--border-subtle)] py-1 shadow-xl"
                 onMouseLeave={() => setShowMenu(false)}
               >
-                <p className="px-3 py-1 text-[11px] font-semibold uppercase text-zinc-400">
+                <p className="px-3 py-1 text-[11px] font-semibold uppercase text-[var(--text-secondary)]">
                   Add to Playlist
                 </p>
                 {playlists.map((pl) => (
@@ -132,7 +132,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                       addTrackToPlaylist(pl.id, track);
                       setShowMenu(false);
                     }}
-                    className="block w-full truncate px-3 py-1.5 text-left text-xs text-zinc-200 hover:bg-white/10"
+                    className="block w-full truncate px-3 py-1.5 text-left text-xs text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
                   >
                     {pl.name}
                   </button>
@@ -142,7 +142,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           </div>
         )}
 
-        <span className="w-10 text-right text-xs tabular-nums text-zinc-400">
+        <span className="w-10 text-right text-xs tabular-nums text-[var(--text-secondary)]">
           {formatTime(track.duration)}
         </span>
       </div>

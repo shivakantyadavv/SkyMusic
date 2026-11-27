@@ -45,14 +45,18 @@ export const PlayerBar: React.FC = () => {
     toggleLike,
   } = usePlayer();
 
-  const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
+  const progressPct =
+    duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
   const volPct = (isMuted ? 0 : volume) * 100;
   const liked = currentTrack ? isLiked(currentTrack.id) : false;
 
   return (
-    <footer className="shrink-0 border-t border-white/10 bg-[#181818] px-3 py-2.5 md:px-5">
+    <footer
+      className="sky-surface shrink-0 border-t px-3 py-2.5 md:px-5"
+      style={{ borderColor: "var(--border-subtle)" }}
+    >
       {audioError && (
-        <div className="mb-1.5 rounded bg-red-500/15 px-3 py-1 text-center text-xs text-red-300">
+        <div className="mb-1.5 rounded bg-red-500/15 px-3 py-1 text-center text-xs text-red-400">
           {audioError}
         </div>
       )}
@@ -72,7 +76,7 @@ export const PlayerBar: React.FC = () => {
                     setNowPlayingOpen(true);
                   }
                 }}
-                className="group flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg p-1.5 -m-1.5 transition-colors hover:bg-white/10"
+                className="group -m-1.5 flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-[var(--bg-card-hover)]"
                 title="Open Now Playing & Lyrics"
               >
                 <div className="relative shrink-0">
@@ -86,21 +90,26 @@ export const PlayerBar: React.FC = () => {
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-white group-hover:text-[#0EA5E9]">
+                  <p
+                    className="truncate text-sm font-semibold transition-colors group-hover:text-[#0EA5E9]"
+                    style={{ color: "var(--text-primary)" }}
+                  >
                     {currentTrack.title}
                   </p>
-                  <p className="truncate text-xs text-zinc-400">
+                  <p
+                    className="truncate text-xs"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
                     {currentTrack.artist}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => toggleLike(currentTrack)}
-                className={`hidden rounded-full p-1.5 transition-colors sm:inline-flex ${
-                  liked
-                    ? "text-[#1DB954]"
-                    : "text-zinc-400 hover:text-white"
-                }`}
+                className="hidden rounded-full p-1.5 transition-colors hover:opacity-100 sm:inline-flex"
+                style={{
+                  color: liked ? "var(--accent-green)" : "var(--text-secondary)",
+                }}
                 aria-label="Like track"
               >
                 <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
@@ -108,14 +117,25 @@ export const PlayerBar: React.FC = () => {
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-[#242424] text-zinc-500 md:h-14 md:w-14">
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-md md:h-14 md:w-14"
+                style={{
+                  backgroundColor: "var(--bg-subtle)",
+                  color: "var(--text-muted)",
+                }}
+              >
                 <ListMusic className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-zinc-300">
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: "var(--text-primary)" }}
+                >
                   Nothing playing
                 </p>
-                <p className="text-xs text-zinc-500">Pick a track to start</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  Pick a track to start
+                </p>
               </div>
             </div>
           )}
@@ -126,9 +146,10 @@ export const PlayerBar: React.FC = () => {
           <div className="flex items-center gap-3 md:gap-5">
             <button
               onClick={toggleShuffle}
-              className={`hidden rounded-full p-1.5 transition-colors sm:inline-flex ${
-                shuffle ? "text-[#0EA5E9]" : "text-zinc-400 hover:text-white"
-              }`}
+              className="hidden rounded-full p-1.5 transition-colors sm:inline-flex"
+              style={{
+                color: shuffle ? "var(--accent-primary)" : "var(--text-secondary)",
+              }}
               title="Shuffle"
             >
               <Shuffle className="h-4 w-4" />
@@ -137,7 +158,8 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={playPrev}
               disabled={!currentTrack}
-              className="rounded-full p-1.5 text-zinc-300 transition-colors hover:text-white disabled:opacity-40"
+              className="rounded-full p-1.5 transition-colors disabled:opacity-40"
+              style={{ color: "var(--text-primary)" }}
               title="Previous"
             >
               <SkipBack className="h-5 w-5 fill-current" />
@@ -146,7 +168,11 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={togglePlay}
               disabled={!currentTrack || isLoadingAudio}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-md transition-transform hover:scale-105 disabled:opacity-40 md:h-10 md:w-10"
+              className="flex h-9 w-9 items-center justify-center rounded-full shadow-md transition-transform hover:scale-105 disabled:opacity-40 md:h-10 md:w-10"
+              style={{
+                backgroundColor: "var(--play-btn-bg)",
+                color: "var(--play-btn-fg)",
+              }}
               title={isPlaying ? "Pause" : "Play"}
             >
               {isLoadingAudio ? (
@@ -161,7 +187,8 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={playNext}
               disabled={!currentTrack}
-              className="rounded-full p-1.5 text-zinc-300 transition-colors hover:text-white disabled:opacity-40"
+              className="rounded-full p-1.5 transition-colors disabled:opacity-40"
+              style={{ color: "var(--text-primary)" }}
               title="Next"
             >
               <SkipForward className="h-5 w-5 fill-current" />
@@ -169,11 +196,13 @@ export const PlayerBar: React.FC = () => {
 
             <button
               onClick={cycleRepeat}
-              className={`hidden rounded-full p-1.5 transition-colors sm:inline-flex ${
-                repeat !== "off"
-                  ? "text-[#1DB954]"
-                  : "text-zinc-400 hover:text-white"
-              }`}
+              className="hidden rounded-full p-1.5 transition-colors sm:inline-flex"
+              style={{
+                color:
+                  repeat !== "off"
+                    ? "var(--accent-green)"
+                    : "var(--text-secondary)",
+              }}
               title={`Repeat: ${repeat}`}
             >
               {repeat === "one" ? (
@@ -186,7 +215,10 @@ export const PlayerBar: React.FC = () => {
 
           {/* Desktop Seek Bar */}
           <div className="hidden w-full items-center gap-2 md:flex">
-            <span className="w-10 text-right text-[11px] tabular-nums text-zinc-400">
+            <span
+              className="w-10 text-right text-[11px] tabular-nums"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {formatTime(currentTime)}
             </span>
             <input
@@ -199,12 +231,15 @@ export const PlayerBar: React.FC = () => {
               disabled={!currentTrack}
               className="sky-range flex-1"
               style={{
-                background: `linear-gradient(to right, #0EA5E9 ${progressPct}%, #3f3f46 ${progressPct}%)`,
+                background: `linear-gradient(to right, var(--accent-primary) ${progressPct}%, var(--range-track-bg) ${progressPct}%)`,
                 height: "4px",
                 borderRadius: "9999px",
               }}
             />
-            <span className="w-10 text-[11px] tabular-nums text-zinc-400">
+            <span
+              className="w-10 text-[11px] tabular-nums"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {formatTime(duration)}
             </span>
           </div>
@@ -214,9 +249,12 @@ export const PlayerBar: React.FC = () => {
         <div className="flex items-center justify-end gap-2 md:w-1/4">
           <button
             onClick={() => setQueueOpen(!isQueueOpen)}
-            className={`relative rounded-full p-2 transition-colors ${
-              isQueueOpen ? "text-[#0EA5E9]" : "text-zinc-400 hover:text-white"
-            }`}
+            className="relative rounded-full p-2 transition-colors"
+            style={{
+              color: isQueueOpen
+                ? "var(--accent-primary)"
+                : "var(--text-secondary)",
+            }}
             title="Queue"
           >
             <ListMusic className="h-4 w-4" />
@@ -230,7 +268,8 @@ export const PlayerBar: React.FC = () => {
           <div className="hidden items-center gap-2 md:flex">
             <button
               onClick={toggleMute}
-              className="rounded-full p-1.5 text-zinc-400 hover:text-white"
+              className="rounded-full p-1.5 transition-colors"
+              style={{ color: "var(--text-secondary)" }}
               title={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted || volume === 0 ? (
@@ -248,7 +287,7 @@ export const PlayerBar: React.FC = () => {
               onChange={(e) => setVolume(Number(e.target.value))}
               className="sky-range w-24"
               style={{
-                background: `linear-gradient(to right, #1DB954 ${volPct}%, #3f3f46 ${volPct}%)`,
+                background: `linear-gradient(to right, var(--accent-green) ${volPct}%, var(--range-track-bg) ${volPct}%)`,
                 height: "4px",
                 borderRadius: "9999px",
               }}
@@ -259,7 +298,10 @@ export const PlayerBar: React.FC = () => {
 
       {/* Mobile Thin Seek Bar */}
       <div className="mt-2 flex items-center gap-2 md:hidden">
-        <span className="text-[10px] tabular-nums text-zinc-400">
+        <span
+          className="text-[10px] tabular-nums"
+          style={{ color: "var(--text-secondary)" }}
+        >
           {formatTime(currentTime)}
         </span>
         <input
@@ -272,12 +314,15 @@ export const PlayerBar: React.FC = () => {
           disabled={!currentTrack}
           className="sky-range flex-1"
           style={{
-            background: `linear-gradient(to right, #0EA5E9 ${progressPct}%, #3f3f46 ${progressPct}%)`,
+            background: `linear-gradient(to right, var(--accent-primary) ${progressPct}%, var(--range-track-bg) ${progressPct}%)`,
             height: "3px",
             borderRadius: "9999px",
           }}
         />
-        <span className="text-[10px] tabular-nums text-zinc-400">
+        <span
+          className="text-[10px] tabular-nums"
+          style={{ color: "var(--text-secondary)" }}
+        >
           {formatTime(duration)}
         </span>
       </div>

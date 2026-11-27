@@ -23,16 +23,20 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   ];
 
   return (
-    <nav className="flex shrink-0 items-center justify-around border-t border-white/10 bg-[#121212]/95 px-2 py-2 backdrop-blur md:hidden">
+    <nav
+      className="sky-surface flex shrink-0 items-center justify-around border-t px-2 py-2 md:hidden"
+      style={{ borderColor: "var(--border-subtle)" }}
+    >
       {items.map((item) => {
         const active = activeTab === item.id;
         return (
           <button
             key={item.id}
             onClick={() => onSelectTab(item.id)}
-            className={`flex flex-col items-center gap-1 rounded-lg px-3 py-1 text-[11px] font-medium transition-colors ${
-              active ? "text-[#0EA5E9]" : "text-zinc-400"
-            }`}
+            className="flex flex-col items-center gap-1 rounded-lg px-3 py-1 text-[11px] font-medium transition-colors"
+            style={{
+              color: active ? "var(--accent-primary)" : "var(--text-secondary)",
+            }}
           >
             {item.icon}
             <span>{item.label}</span>

@@ -221,6 +221,22 @@ async function main() {
         env.CARGO_TARGET_DIR = targetJunction;
       }
 
+      // Ensure skymusic crate rebuilds across host & cross-compile targets so new dist assets are embedded
+      for (const entry of fs.readdirSync(targetBase, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const fpDir =
+          entry.name === "release"
+            ? path.join(targetBase, "release", ".fingerprint")
+            : path.join(targetBase, entry.name, "release", ".fingerprint");
+        if (fs.existsSync(fpDir)) {
+          for (const fp of fs.readdirSync(fpDir)) {
+            if (fp.startsWith("skymusic")) {
+              fs.rmSync(path.join(fpDir, fp), { recursive: true, force: true });
+            }
+          }
+        }
+      }
+
       // 1. Build Windows executable + NSIS installer + .sig
       runCmd("npm run tauri build", { env });
 
@@ -341,8 +357,10 @@ async function main() {
         }
 
         const androidDir = path.join(ROOT_DIR, "src-tauri", "gen", "android");
+        const apkOutputsDir = path.join(androidDir, "app", "build", "outputs", "apk");
+        fs.rmSync(apkOutputsDir, { recursive: true, force: true });
         execSync(
-          `gradlew.bat assembleUniversalRelease "-PabiList=arm64-v8a,armeabi-v7a,x86_64" -x rustBuildUniversalRelease -x rustBuildArm64Release -x rustBuildArmRelease -x rustBuildX86Release -x rustBuildX86_64Release`,
+          `gradlew.bat assembleUniversalRelease "-PabiList=arm64-v8a,armeabi-v7a,x86_64" -x rustBuildUniversalRelease -x rustBuildArm64Release -x rustBuildArmRelease -x rustBuildX86Release -x rustBuildX86_64Release --rerun-tasks --no-configuration-cache`,
           { cwd: androidDir, env: androidEnv, stdio: "inherit" }
         );
       } else {
@@ -360,7 +378,10 @@ async function main() {
           "outputs",
           "apk"
         ),
-        (_, name) => name.endsWith(".apk") && !name.includes("aligned")
+        (_, name) =>
+          name.endsWith(".apk") &&
+          !name.includes("aligned") &&
+          !name.includes("unsigned")
       );
 
       if (builtApk) {

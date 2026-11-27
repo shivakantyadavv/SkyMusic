@@ -38,19 +38,19 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#181818] shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="sky-surface-strong w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border-subtle)] shadow-2xl">
         {/* Top Accent Banner */}
-        <div className="flex items-center justify-between bg-gradient-to-r from-[#0EA5E9]/25 to-[#1DB954]/20 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-gradient-to-r from-[#0EA5E9]/20 to-[#1DB954]/15 px-5 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] text-white">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
                 Update Available • {update.shortVersion}
               </h2>
-              <p className="text-xs text-zinc-300">
+              <p className="text-xs text-[var(--text-secondary)]">
                 Current version: {formatShortVersion(update.currentVersion)}
               </p>
             </div>
@@ -59,7 +59,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
           {!installing && (
             <button
               onClick={onClose}
-              className="rounded-full p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+              className="rounded-full p-1 text-[var(--text-secondary)] transition hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
               aria-label="Close update modal"
             >
               <X className="h-5 w-5" />
@@ -70,21 +70,21 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
         {/* Changelog Body */}
         <div className="space-y-4 p-5">
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
               What&apos;s New
             </p>
-            <div className="max-h-44 overflow-y-auto whitespace-pre-wrap rounded-xl bg-[#121212] p-3.5 text-xs leading-relaxed text-zinc-200">
+            <div className="max-h-44 overflow-y-auto whitespace-pre-wrap rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3.5 text-xs leading-relaxed text-[var(--text-primary)]">
               {update.notes || "Performance improvements and bug fixes."}
             </div>
           </div>
 
           {installing && (
             <div className="space-y-1.5">
-              <div className="flex justify-between text-xs text-zinc-300">
+              <div className="flex justify-between text-xs text-[var(--text-secondary)]">
                 <span>Downloading update...</span>
                 <span className="tabular-nums">{progress}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-subtle)]">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-[#0EA5E9] to-[#1DB954] transition-all duration-200"
                   style={{ width: `${progress}%` }}
@@ -94,7 +94,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
           )}
 
           {error && (
-            <p className="rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-300">
+            <p className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-500">
               {error}
             </p>
           )}
@@ -103,7 +103,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             {!installing && (
               <button
                 onClick={onClose}
-                className="rounded-full px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-white/10 hover:text-white"
+                className="rounded-full px-4 py-2 text-xs font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--bg-subtle-hover)] hover:text-[var(--text-primary)]"
               >
                 Later
               </button>

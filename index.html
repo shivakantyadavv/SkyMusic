@@ -1,12 +1,24 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Skymusic</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("skymusic_theme");
+          if (t !== "dark" && t !== "light" && t !== "glass") t = "dark";
+          document.documentElement.setAttribute("data-theme", t);
+          document.documentElement.classList.toggle("dark", t !== "light");
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
   </head>
-  <body class="bg-[#121212] text-white antialiased selection:bg-[#0EA5E9]/30 selection:text-white">
+  <body class="antialiased selection:bg-[#0EA5E9]/30">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

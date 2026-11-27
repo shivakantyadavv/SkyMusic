@@ -1,6 +1,6 @@
 # Skymusic
 
-A sleek, cross-platform dark-themed music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
+A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
 > **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.0-0EA5E9?style=flat-square) — Released on **2026-11-27**
@@ -16,14 +16,16 @@ Always get the newest build with 1 click:
 
 | Platform | Package | Direct Download |
 | --- | --- | --- |
-| **Windows 11 (Installer)** | Single-file NSIS Setup (`.exe`) | [Download Latest Windows Installer](https://github.com/shivakantyadavv/skymusic/releases/latest) |
+| **Windows 11 (Installer)** | Single-file NSIS Setup (`skymusic_v1.1_x64-setup.exe`) | [Download v1.1 Windows Installer](https://github.com/shivakantyadavv/skymusic/releases/download/v1.1/skymusic_v1.1_x64-setup.exe) |
 | **Windows 11 (Standalone)** | Portable Executable (`skymusic.exe`) | [![Download skymusic.exe](https://img.shields.io/badge/Download-skymusic.exe-0EA5E9?style=for-the-badge&logo=windows)](https://github.com/shivakantyadavv/skymusic/releases/latest/download/skymusic.exe) |
+| **Windows 11 (Portable Zip)** | Zip Archive (`skymusic_v1.1_windows_portable.zip`) | [Download Portable ZIP](https://github.com/shivakantyadavv/skymusic/releases/download/v1.1/skymusic_v1.1_windows_portable.zip) |
 | **Android** | Signed Universal APK (`skymusic.apk`) | [![Download skymusic.apk](https://img.shields.io/badge/Download-skymusic.apk-1DB954?style=for-the-badge&logo=android)](https://github.com/shivakantyadavv/skymusic/releases/latest/download/skymusic.apk) |
 
 ---
 
 ## Key Features
 
+- **Multi-Theme Appearance:** Switch live in **Settings** between **Dark Mode**, **Light Mode**, and **Glass Effect (Glassmorphism)** with persistent storage and zero flash on startup.
 - **Curated Home Discovery:** Browse **Top Trending**, **Top 100 Global**, **Bollywood Hits**, **Hollywood Hits**, and **Punjabi Hits** in a clean card-grid layout.
 - **Full-Length Streaming + Fast Search:** Instant track, artist, and album search backed by Deezer & iTunes metadata and full-length YouTube IFrame playback with automatic failover.
 - **Now Playing & Synced Lyrics:** Click the bottom track bar to expand a smooth animated Now Playing screen with live-highlighted, clickable timestamped lyrics.
@@ -37,7 +39,7 @@ Always get the newest build with 1 click:
 
 | Desktop (Windows 11) | Now Playing & Synced Lyrics |
 | --- | --- |
-| *Home, Search, Library, and Queue Drawer in dark `#121212` theme* | *Slide-up player with blurred album backdrop and time-synced lyrics* |
+| *Home, Search, Library, Settings Themes (Dark, Light, Glass), and Queue Drawer* | *Slide-up player with theme-adaptive blurred backdrop and time-synced lyrics* |
 
 ---
 
