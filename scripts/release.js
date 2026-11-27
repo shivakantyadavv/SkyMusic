@@ -221,17 +221,21 @@ async function main() {
         env.CARGO_TARGET_DIR = targetJunction;
       }
 
+      const targetBase = targetJunction || path.join(ROOT_DIR, "src-tauri", "target");
+
       // Ensure skymusic crate rebuilds across host & cross-compile targets so new dist assets are embedded
-      for (const entry of fs.readdirSync(targetBase, { withFileTypes: true })) {
-        if (!entry.isDirectory()) continue;
-        const fpDir =
-          entry.name === "release"
-            ? path.join(targetBase, "release", ".fingerprint")
-            : path.join(targetBase, entry.name, "release", ".fingerprint");
-        if (fs.existsSync(fpDir)) {
-          for (const fp of fs.readdirSync(fpDir)) {
-            if (fp.startsWith("skymusic")) {
-              fs.rmSync(path.join(fpDir, fp), { recursive: true, force: true });
+      if (fs.existsSync(targetBase)) {
+        for (const entry of fs.readdirSync(targetBase, { withFileTypes: true })) {
+          if (!entry.isDirectory()) continue;
+          const fpDir =
+            entry.name === "release"
+              ? path.join(targetBase, "release", ".fingerprint")
+              : path.join(targetBase, entry.name, "release", ".fingerprint");
+          if (fs.existsSync(fpDir)) {
+            for (const fp of fs.readdirSync(fpDir)) {
+              if (fp.startsWith("skymusic")) {
+                fs.rmSync(path.join(fpDir, fp), { recursive: true, force: true });
+              }
             }
           }
         }
@@ -240,7 +244,6 @@ async function main() {
       // 1. Build Windows executable + NSIS installer + .sig
       runCmd("npm run tauri build", { env });
 
-      const targetBase = targetJunction || path.join(ROOT_DIR, "src-tauri", "target");
       const releaseDir = path.join(targetBase, "release");
       const nsisDir = path.join(releaseDir, "bundle", "nsis");
 
