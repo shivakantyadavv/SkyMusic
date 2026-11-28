@@ -3,10 +3,9 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.6-0EA5E9?style=flat-square) — Released on **2026-11-28**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.7-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- fix: Android full-song YouTube playback (was 30s preview)
-- fix: NowPlaying DOLBY ATMOS badge no longer overlaps seekbar
+- fix: place Dolby Atmos badge inline after song title (icon-only for long titles) and prevent landscape artwork overlap
 <!-- LATEST_VERSION_END -->
 
 ---

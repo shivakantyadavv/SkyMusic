@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.7] - 2026-11-28
+
+### What's New
+- fix: place Dolby Atmos badge inline after song title (icon-only for long titles) and prevent landscape artwork overlap
+
 ## [v1.6] - 2026-11-28
 
 ### What's New

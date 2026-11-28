@@ -1,11 +1,11 @@
 {
-  "version": "1.6.0",
-  "notes": "fix: Android full-song YouTube playback (was 30s preview); fix: NowPlaying DOLBY ATMOS badge no longer overlaps seekbar",
-  "pub_date": "2026-11-28T06:05:27.049Z",
+  "version": "1.7.0",
+  "notes": "fix: place Dolby Atmos badge inline after song title (icon-only for long titles) and prevent landscape artwork overlap",
+  "pub_date": "2026-11-28T06:20:04.135Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTkwZWhtWDNvTjhaalZaQ3FucG10cHhva3NwOFNnb2FldTVnZXh0Y3gwbFhRcmwzS09IRm1naWxlRVUrdTdpWEJOdzZBOEpwaW5MQkF6WHRqbWkyOFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ1NTU3CWZpbGU6U2t5bXVzaWNfMS42LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNi4wCm51NkROZWxsOUFMVnJQZGJZK3VoamF6bTNCY2tnUk13enVMVXFLQk90TTVYclNKUERGUzZoYis0ZHdyaHNpSno4c2ZFRXJpWEVTbm5IaVA5QXRFakF3PT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.6/skymusic_v1.6_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUSt2L1JERlZOWUdPdGRqbjdqemV3Uk1PeGU0VDdZNldoNmlFelZKUDN0Mnp5K3g0bTFad0JNbTg2aUhrZHl6YjFzcWJRZW1kUmxvYW5KbXpQV2w4V1FnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ2NDU3CWZpbGU6U2t5bXVzaWNfMS43LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNy4wCjJ5ajR4UHNOVTVGWmtEVkF1eWc4WHZBWU1HR0JFUWd4S2NYWTk2Z25uUml5ZUN6d3VFM0ZJU3hmUWp6bFNvM09nbGVNNUc5dzJLVncycGcrYVExS0JRPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.7/skymusic_v1.7_x64-setup.exe"
     }
   }
 }
