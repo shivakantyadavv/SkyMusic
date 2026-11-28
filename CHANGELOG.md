@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.8] - 2026-11-28
+
+### What's New
+- feat: add Windows Dual Speaker Output with Echo/Delay Sync slider and Multi-Device Party Sync
+
 ## [v1.7] - 2026-11-28
 
 ### What's New

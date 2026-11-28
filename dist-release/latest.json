@@ -1,11 +1,11 @@
 {
-  "version": "1.7.0",
-  "notes": "fix: place Dolby Atmos badge inline after song title (icon-only for long titles) and prevent landscape artwork overlap",
-  "pub_date": "2026-11-28T06:20:04.135Z",
+  "version": "1.8.0",
+  "notes": "feat: add Windows Dual Speaker Output with Echo/Delay Sync slider and Multi-Device Party Sync",
+  "pub_date": "2026-11-28T06:37:42.906Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUSt2L1JERlZOWUdPdGRqbjdqemV3Uk1PeGU0VDdZNldoNmlFelZKUDN0Mnp5K3g0bTFad0JNbTg2aUhrZHl6YjFzcWJRZW1kUmxvYW5KbXpQV2w4V1FnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ2NDU3CWZpbGU6U2t5bXVzaWNfMS43LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNy4wCjJ5ajR4UHNOVTVGWmtEVkF1eWc4WHZBWU1HR0JFUWd4S2NYWTk2Z25uUml5ZUN6d3VFM0ZJU3hmUWp6bFNvM09nbGVNNUc5dzJLVncycGcrYVExS0JRPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.7/skymusic_v1.7_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXd5M0NoYTZ5UkF4T3dKMXMzemVkUW9HTmErTTF4bU1kUWxOd1FIaTBqeVVPdzBhY1Q1MmlBVmFIcWF2ZmVkb1puQ0E3dzRHczN5U2t4WXJDMHRiL1FzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ3NTY5CWZpbGU6U2t5bXVzaWNfMS44LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuOC4wCkIwUXozUTM2U04zUUFkbjQwamtEZE1NaWNrNExkYXlveXRZQi85cE9EODVpdVVrZUx1REgrNUxXSU40ZmlJUGVUc0NIMnV1eTUvR0tjODZ3TnpjS0RBPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.8/skymusic_v1.8_x64-setup.exe"
     }
   }
 }
