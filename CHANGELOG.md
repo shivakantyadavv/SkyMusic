@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.1] - 2026-11-28
+
+### What's New
+- fix: prevent same-speaker echo when setSinkId fails and surface dual Bluetooth hardware/routing status
+
 ## [v2.0] - 2026-11-28
 
 ### What's New

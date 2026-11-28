@@ -1,11 +1,11 @@
 {
-  "version": "2.0.0",
-  "notes": "fix: unlock Windows audio output device enumeration so all connected Bluetooth speakers (e.g. Mivi + Zebronics) appear in Dual Speaker dropdown",
-  "pub_date": "2026-11-28T07:38:02.019Z",
+  "version": "2.1.0",
+  "notes": "fix: prevent same-speaker echo when setSinkId fails and surface dual Bluetooth hardware/routing status",
+  "pub_date": "2026-11-28T08:04:51.956Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXp1VUN1cTN2OENTQkZPS3pXUGM1KzJjVnZFNXhwamxIY3p4Y2FwZVdNckxmZzZkYk9PZVBpUFQyclB0QVEwZ0g1c3pUME1WL0FJeHNDcnhYNUVIS3cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODUxMDgzCWZpbGU6U2t5bXVzaWNfMi4wLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMC4wCmFOOFNHcXBzQm01cDNGQ250L25VcXUvTVdTOUZjNzNlVDF0VC9SaVptZ3RIbjR5QmFjSTNhQ1FyV2dtUklnTzhtRVVGSTdibUl6amNVR0VzWkJxckJBPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.0/skymusic_v2.0_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTVreE1XNHAzS25IQmkyTXI1MXZJMUY1NE1uc1R6ZUIyK3FJcktZRDdZZEx5aU8zanRsQUJMRkNQZUp2WmpGQ1RFTGlsYlluUGZqZjdpVUFTcUpWUmdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODUyNjQ5CWZpbGU6U2t5bXVzaWNfMi4xLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMS4wCnN4cXVwVE5qOEJOdUV2aWNuSFBSUGNTRm1aTFEvZEIvQU12M055RnpuUmdxTjVMM2VFaTJuY2pqQWpaZFo4WUxxSHNoVTNRMitSYlFySGVDYURxN0FRPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.1/skymusic_v2.1_x64-setup.exe"
     }
   }
 }
