@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.0] - 2026-11-28
+
+### What's New
+- fix: unlock Windows audio output device enumeration so all connected Bluetooth speakers (e.g. Mivi + Zebronics) appear in Dual Speaker dropdown
+
 ## [v1.9] - 2026-11-28
 
 ### What's New

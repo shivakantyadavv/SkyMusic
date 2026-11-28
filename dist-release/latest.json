@@ -1,11 +1,11 @@
 {
-  "version": "1.9.0",
-  "notes": "fix: resolve 320kbps full-song downloads via JioSaavn + yt-dlp fallback so downloads work on both Windows and Android",
-  "pub_date": "2026-11-28T07:25:53.369Z",
+  "version": "2.0.0",
+  "notes": "fix: unlock Windows audio output device enumeration so all connected Bluetooth speakers (e.g. Mivi + Zebronics) appear in Dual Speaker dropdown",
+  "pub_date": "2026-11-28T07:38:02.019Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUS9qUjYyMHpiWFRsUXAyWTlqUnlNU3h2bHdEd3VVOVhsOEttSmlSTTdxNzZqVmJqMENaem5zRnhpZTR0T3A5R3p1Ynp6TGI3ZVBUWWYwU0o5elRkREFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ5NzAwCWZpbGU6U2t5bXVzaWNfMS45LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuOS4wCnQ3WC9MdmFiSkhjMThMUGtSUk9naWptc1M2bmY4Z3I5ZUZqaklYSzJWNDBYUDN0S3pYVHdjOC9Gc1Q3TC8rRHFoKzROZURUMWxvR0d6aWZBbVdYK0RRPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.9/skymusic_v1.9_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXp1VUN1cTN2OENTQkZPS3pXUGM1KzJjVnZFNXhwamxIY3p4Y2FwZVdNckxmZzZkYk9PZVBpUFQyclB0QVEwZ0g1c3pUME1WL0FJeHNDcnhYNUVIS3cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODUxMDgzCWZpbGU6U2t5bXVzaWNfMi4wLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMC4wCmFOOFNHcXBzQm01cDNGQ250L25VcXUvTVdTOUZjNzNlVDF0VC9SaVptZ3RIbjR5QmFjSTNhQ1FyV2dtUklnTzhtRVVGSTdibUl6amNVR0VzWkJxckJBPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.0/skymusic_v2.0_x64-setup.exe"
     }
   }
 }
