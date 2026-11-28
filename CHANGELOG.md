@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.2] - 2026-11-28
+
+### What's New
+- feat: fullscreen auto-adjusting artist backdrop on NowPlaying, audio-beat reactive Fire Sparks & Raindrops visualizer, and zero-overlap bottom-docked controls
+
 ## [v2.1] - 2026-11-28
 
 ### What's New

@@ -3,9 +3,9 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v2.1-0EA5E9?style=flat-square) — Released on **2026-11-28**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v2.2-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- fix: prevent same-speaker echo when setSinkId fails and surface dual Bluetooth hardware/routing status
+- feat: fullscreen auto-adjusting artist backdrop on NowPlaying, audio-beat reactive Fire Sparks & Raindrops visualizer, and zero-overlap bottom-docked controls
 <!-- LATEST_VERSION_END -->
 
 ---

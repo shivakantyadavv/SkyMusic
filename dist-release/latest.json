@@ -1,11 +1,11 @@
 {
-  "version": "2.1.0",
-  "notes": "fix: prevent same-speaker echo when setSinkId fails and surface dual Bluetooth hardware/routing status",
-  "pub_date": "2026-11-28T08:04:51.956Z",
+  "version": "2.2.0",
+  "notes": "feat: fullscreen auto-adjusting artist backdrop on NowPlaying, audio-beat reactive Fire Sparks & Raindrops visualizer, and zero-overlap bottom-docked controls",
+  "pub_date": "2026-11-28T08:19:28.352Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTVreE1XNHAzS25IQmkyTXI1MXZJMUY1NE1uc1R6ZUIyK3FJcktZRDdZZEx5aU8zanRsQUJMRkNQZUp2WmpGQ1RFTGlsYlluUGZqZjdpVUFTcUpWUmdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODUyNjQ5CWZpbGU6U2t5bXVzaWNfMi4xLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMS4wCnN4cXVwVE5qOEJOdUV2aWNuSFBSUGNTRm1aTFEvZEIvQU12M055RnpuUmdxTjVMM2VFaTJuY2pqQWpaZFo4WUxxSHNoVTNRMitSYlFySGVDYURxN0FRPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.1/skymusic_v2.1_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTA2OTEwOXJmYjlTdFlWOE5uamlIa1F5aHZDSWtMeXAzZHR0bStIeHJDcFByb3ZXSGlYazFHckxIczdOUElXWjhrSklJcThObmF2ZDhGOURpK1IxK0FJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODUzNDg3CWZpbGU6U2t5bXVzaWNfMi4yLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMi4wCkdpVlJiak5IUjVrdUtzZlQzdC9zVUQzZkR0Qk5NUklLbnI0S3YxcFZVazd3L2VZNVQ1MnpLQ2Uxc294dlBLTkJHNlpkdFc0L0VSc01sZ1pNMHdZbkJ3PT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.2/skymusic_v2.2_x64-setup.exe"
     }
   }
 }
