@@ -1,11 +1,11 @@
 {
-  "version": "2.3.0",
-  "notes": "feat: redesign NowPlaying with HD scaled album cover backdrop, stacked album carousel, waveform seekbar, and Up Next queue list",
-  "pub_date": "2026-11-28T08:41:27.007Z",
+  "version": "2.5.0",
+  "notes": "fix: enable 2-column desktop NowPlaying layout (md:grid-cols-12) with larger HD album carousel and waveform seekbar",
+  "pub_date": "2026-11-28T09:47:57.795Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXkrUVJZVFZnWjFrM0FHTEIwV3Q1d2EyOTN3NXdnVmdBQTRxR0VjVVlIOG4yWmR2VG0zVFJmL1U1MG9aN21Zd0ZCelhINXlYZU9FODlTQVQrUjBYQlFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODU0NzMzCWZpbGU6U2t5bXVzaWNfMi4zLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMy4wClgxR1RTalA0dFMrcW8yN1VUWnVhMlhhN3E2Z0pSQkZ1NTFJM3RMbU11V3g1cXE1a1dxSjBQNkVvZUZuUGN0OW1oZWxIZmxHRlRSLzI5SkkwMDZnbUFBPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.3/skymusic_v2.3_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTBnZnI3M0xPeGY5dU1yUzhBNkU5S3c0K2FBMHNMZW5KcEVSMFVpZEN1dzNIRXdpYUVaSi9QVXVCWG5PaUVzQ2NQNmRVditPYUVtdlJ5aXlWQWt3dVFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODU4NDQxCWZpbGU6U2t5bXVzaWNfMi41LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuNS4wCm1ja2ZRWUppVS91b2hFcm05T205em1yT3d0RzBiM3pMSi9wYWVBR3pibzgwVjRHbWdidXpPaks0MEtudWsvT2FXbUlLWE1raFZURCtDNGZVSUsyL0RBPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.5/skymusic_v2.5_x64-setup.exe"
     }
   }
 }

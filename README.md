@@ -3,9 +3,9 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v2.3-0EA5E9?style=flat-square) — Released on **2026-11-28**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v2.5-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- feat: redesign NowPlaying with HD scaled album cover backdrop, stacked album carousel, waveform seekbar, and Up Next queue list
+- fix: enable 2-column desktop NowPlaying layout (md:grid-cols-12) with larger HD album carousel and waveform seekbar
 <!-- LATEST_VERSION_END -->
 
 ---

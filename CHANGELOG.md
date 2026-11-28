@@ -2,6 +2,16 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.5] - 2026-11-28
+
+### What's New
+- fix: enable 2-column desktop NowPlaying layout (md:grid-cols-12) with larger HD album carousel and waveform seekbar
+
+## [v2.4] - 2026-11-28
+
+### What's New
+- revert: restore classic NowPlaying layout with crisp HD song album cover fullscreen background and beat visualizer
+
 ## [v2.3] - 2026-11-28
 
 ### What's New
