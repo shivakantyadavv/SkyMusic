@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.6] - 2026-11-28
+
+### What's New
+- feat: Home HD album blur backdrop with Dark Glassmorphism, Waveform Seekbar on PlayerBar, and 6-mode Beat FX (Sparks, Rain, Fireflies, Cloudy, Water Droplets, Off)
+
 ## [v2.5] - 2026-11-28
 
 ### What's New
