@@ -1,11 +1,11 @@
 {
-  "version": "1.8.0",
-  "notes": "feat: add Windows Dual Speaker Output with Echo/Delay Sync slider and Multi-Device Party Sync",
-  "pub_date": "2026-11-28T06:37:42.906Z",
+  "version": "1.9.0",
+  "notes": "fix: resolve 320kbps full-song downloads via JioSaavn + yt-dlp fallback so downloads work on both Windows and Android",
+  "pub_date": "2026-11-28T07:25:53.369Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXd5M0NoYTZ5UkF4T3dKMXMzemVkUW9HTmErTTF4bU1kUWxOd1FIaTBqeVVPdzBhY1Q1MmlBVmFIcWF2ZmVkb1puQ0E3dzRHczN5U2t4WXJDMHRiL1FzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ3NTY5CWZpbGU6U2t5bXVzaWNfMS44LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuOC4wCkIwUXozUTM2U04zUUFkbjQwamtEZE1NaWNrNExkYXlveXRZQi85cE9EODVpdVVrZUx1REgrNUxXSU40ZmlJUGVUc0NIMnV1eTUvR0tjODZ3TnpjS0RBPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.8/skymusic_v1.8_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUS9qUjYyMHpiWFRsUXAyWTlqUnlNU3h2bHdEd3VVOVhsOEttSmlSTTdxNzZqVmJqMENaem5zRnhpZTR0T3A5R3p1Ynp6TGI3ZVBUWWYwU0o5elRkREFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ5NzAwCWZpbGU6U2t5bXVzaWNfMS45LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuOS4wCnQ3WC9MdmFiSkhjMThMUGtSUk9naWptc1M2bmY4Z3I5ZUZqaklYSzJWNDBYUDN0S3pYVHdjOC9Gc1Q3TC8rRHFoKzROZURUMWxvR0d6aWZBbVdYK0RRPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.9/skymusic_v1.9_x64-setup.exe"
     }
   }
 }

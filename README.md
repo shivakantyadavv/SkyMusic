@@ -3,9 +3,9 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.8-0EA5E9?style=flat-square) — Released on **2026-11-28**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.9-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- feat: add Windows Dual Speaker Output with Echo/Delay Sync slider and Multi-Device Party Sync
+- fix: resolve 320kbps full-song downloads via JioSaavn + yt-dlp fallback so downloads work on both Windows and Android
 <!-- LATEST_VERSION_END -->
 
 ---

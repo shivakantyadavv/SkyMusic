@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.9] - 2026-11-28
+
+### What's New
+- fix: resolve 320kbps full-song downloads via JioSaavn + yt-dlp fallback so downloads work on both Windows and Android
+
 ## [v1.8] - 2026-11-28
 
 ### What's New
