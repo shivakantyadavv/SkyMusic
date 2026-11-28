@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.3] - 2026-11-28
+
+### What's New
+- feat: redesign NowPlaying with HD scaled album cover backdrop, stacked album carousel, waveform seekbar, and Up Next queue list
+
 ## [v2.2] - 2026-11-28
 
 ### What's New

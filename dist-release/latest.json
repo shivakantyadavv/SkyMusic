@@ -1,11 +1,11 @@
 {
-  "version": "2.2.0",
-  "notes": "feat: fullscreen auto-adjusting artist backdrop on NowPlaying, audio-beat reactive Fire Sparks & Raindrops visualizer, and zero-overlap bottom-docked controls",
-  "pub_date": "2026-11-28T08:19:28.352Z",
+  "version": "2.3.0",
+  "notes": "feat: redesign NowPlaying with HD scaled album cover backdrop, stacked album carousel, waveform seekbar, and Up Next queue list",
+  "pub_date": "2026-11-28T08:41:27.007Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTA2OTEwOXJmYjlTdFlWOE5uamlIa1F5aHZDSWtMeXAzZHR0bStIeHJDcFByb3ZXSGlYazFHckxIczdOUElXWjhrSklJcThObmF2ZDhGOURpK1IxK0FJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODUzNDg3CWZpbGU6U2t5bXVzaWNfMi4yLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMi4wCkdpVlJiak5IUjVrdUtzZlQzdC9zVUQzZkR0Qk5NUklLbnI0S3YxcFZVazd3L2VZNVQ1MnpLQ2Uxc294dlBLTkJHNlpkdFc0L0VSc01sZ1pNMHdZbkJ3PT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.2/skymusic_v2.2_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXkrUVJZVFZnWjFrM0FHTEIwV3Q1d2EyOTN3NXdnVmdBQTRxR0VjVVlIOG4yWmR2VG0zVFJmL1U1MG9aN21Zd0ZCelhINXlYZU9FODlTQVQrUjBYQlFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODU0NzMzCWZpbGU6U2t5bXVzaWNfMi4zLjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuMy4wClgxR1RTalA0dFMrcW8yN1VUWnVhMlhhN3E2Z0pSQkZ1NTFJM3RMbU11V3g1cXE1a1dxSjBQNkVvZUZuUGN0OW1oZWxIZmxHRlRSLzI5SkkwMDZnbUFBPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.3/skymusic_v2.3_x64-setup.exe"
     }
   }
 }
