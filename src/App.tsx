@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Disc3, MonitorSmartphone } from "lucide-react";
+import { BeatFxButton } from "./components/BeatFxButton";
+import { BeatVisualizerCanvas } from "./components/BeatVisualizerCanvas";
 import { ConnectModal } from "./components/ConnectModal";
 import { MobileNav } from "./components/MobileNav";
 import { NowPlayingModal } from "./components/NowPlayingModal";
@@ -11,6 +13,7 @@ import { NavigationProvider, useNavigation } from "./context/NavigationContext";
 import { PlayerProvider, usePlayer } from "./context/PlayerContext";
 import { SyncProvider, useSync } from "./context/SyncContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { getHdAlbumArt, useBeatFxMode } from "./utils/albumArt";
 import {
   installSpatialDpadNavigation,
   invokeBackHandlers,
@@ -50,6 +53,7 @@ const AppShell: React.FC = () => {
     null
   );
   const [tvMode, setTvMode] = useState<boolean>(() => syncTvRootAttribute());
+  const { beatFxMode } = useBeatFxMode();
 
   // Sync TV mode attribute & listen for preference toggles
   useEffect(() => {
@@ -163,24 +167,38 @@ const AppShell: React.FC = () => {
         color: "var(--text-primary)",
       }}
     >
-      {/* Dynamic Ambient Mesh Backdrop for Glassmorphism Theme */}
-      {theme === "glass" && (
+      {/* Fullscreen HD Album Cover Blur Backdrop (Dark & Glass Themes) */}
+      {(theme === "dark" || theme === "glass") && (
         <div
           aria-hidden="true"
-          className="sky-glass-aurora pointer-events-none fixed inset-0 z-0 overflow-hidden"
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#090b0f]"
         >
           {currentTrack?.albumArt && (
             <img
-              src={currentTrack.albumArt}
+              src={getHdAlbumArt(currentTrack.albumArt)}
               alt=""
-              className={`h-full w-full scale-125 object-cover blur-3xl transition-opacity duration-700 ${
-                isPlaying ? "opacity-30 animate-pulse" : "opacity-20"
+              className={`h-full w-full scale-105 object-cover object-center blur-xl transition-all duration-700 ${
+                isPlaying ? "opacity-75" : "opacity-55"
               }`}
-              style={{ animationDuration: "8s" }}
             />
           )}
-          <div className="sky-glass-aurora absolute inset-0 opacity-80 mix-blend-screen" />
-          <div className="absolute inset-0 bg-slate-950/35" />
+          {theme === "glass" && (
+            <div className="sky-glass-aurora absolute inset-0 opacity-50 mix-blend-screen" />
+          )}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(8,11,16,0.34) 0%, rgba(8,11,16,0.42) 45%, rgba(8,11,16,0.68) 100%)",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Ambient Beat FX Layer above background & cards (disabled on TV for crisp D-Pad compositing) */}
+      {(theme === "dark" || theme === "glass") && !isNowPlayingOpen && !tvMode && (
+        <div className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
+          <BeatVisualizerCanvas mode={beatFxMode} isPlaying={isPlaying} />
         </div>
       )}
 
@@ -209,9 +227,11 @@ const AppShell: React.FC = () => {
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => openConnectModal("devices")}
+            <div className="flex items-center gap-2">
+              <BeatFxButton compact />
+              <button
+                type="button"
+                onClick={() => openConnectModal("devices")}
               className="relative inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)]"
               title="Connect, Sync & Cast to TV"
             >
@@ -228,6 +248,7 @@ const AppShell: React.FC = () => {
                   : "Sync"}
               </span>
             </button>
+            </div>
           </header>
 
           {/* Scrollable Page Content */}

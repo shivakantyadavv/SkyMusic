@@ -29,6 +29,7 @@
       var pendingVolume = 80;
       var pendingMuted = false;
       var timeTimer = null;
+      var wantPlaying = false;
 
       function postToParent(payload) {
         try {
@@ -124,6 +125,13 @@
             },
             onStateChange: function (event) {
               var state = event.data;
+              if (state === 2 && wantPlaying && document.hidden) {
+                // Keep background playback alive when minimized on Android/TV
+                try {
+                  player.playVideo();
+                  return;
+                } catch (e) {}
+              }
               if (state === 1) {
                 startTimePolling();
               } else {
@@ -159,6 +167,7 @@
 
         switch (msg.type) {
           case "yt:load":
+            wantPlaying = true;
             if (typeof msg.volume === "number" || typeof msg.muted === "boolean") {
               applyVolume(msg.volume, msg.muted);
             }
@@ -167,6 +176,7 @@
             }
             break;
           case "yt:play":
+            wantPlaying = true;
             if (player && playerReady) {
               try {
                 player.playVideo();
@@ -174,6 +184,7 @@
             }
             break;
           case "yt:pause":
+            wantPlaying = false;
             if (player && playerReady) {
               try {
                 player.pauseVideo();
@@ -181,6 +192,7 @@
             }
             break;
           case "yt:stop":
+            wantPlaying = false;
             stopTimePolling();
             pendingLoad = null;
             if (player && playerReady) {

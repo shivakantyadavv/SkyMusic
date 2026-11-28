@@ -4,24 +4,24 @@
 
 :root,
 [data-theme="dark"] {
-  --bg-app: #0f1215;
-  --bg-sidebar-shell: #090b0d;
-  --bg-main: linear-gradient(180deg, #171f27 0%, #0f1215 36%, #0f1215 100%);
-  --bg-surface: #161a1f;
-  --bg-surface-strong: #1a1f26;
-  --bg-card: #161a1f;
-  --bg-card-hover: #222831;
-  --bg-subtle: rgba(255, 255, 255, 0.08);
-  --bg-subtle-hover: rgba(255, 255, 255, 0.14);
-  --bg-input: #161a1f;
+  --bg-app: #090b0f;
+  --bg-sidebar-shell: rgba(10, 13, 20, 0.44);
+  --bg-main: transparent;
+  --bg-surface: rgba(12, 16, 24, 0.48);
+  --bg-surface-strong: rgba(16, 20, 28, 0.78);
+  --bg-card: rgba(255, 255, 255, 0.08);
+  --bg-card-hover: rgba(255, 255, 255, 0.15);
+  --bg-subtle: rgba(255, 255, 255, 0.09);
+  --bg-subtle-hover: rgba(255, 255, 255, 0.17);
+  --bg-input: rgba(255, 255, 255, 0.09);
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  --text-secondary: #b4bac4;
+  --text-muted: #7c8491;
+  --border-subtle: rgba(255, 255, 255, 0.12);
   --accent-primary: #0ea5e9;
   --accent-green: #1db954;
-  --backdrop-blur: none;
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.28);
+  --backdrop-blur: blur(22px) saturate(155%);
+  --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.36);
   --range-track-bg: #3f3f46;
   --range-thumb-bg: #ffffff;
   --play-btn-bg: #ffffff;
@@ -210,6 +210,19 @@ input[type="range"].sky-range:hover::-webkit-slider-thumb {
 /* Android TV / 10-foot D-Pad Focus & Ergonomics */
 [data-tv="true"] {
   user-select: none;
+  --backdrop-blur: none;
+  --bg-card: rgba(20, 24, 33, 0.92);
+  --bg-card-hover: rgba(34, 41, 56, 0.96);
+  --bg-surface: rgba(14, 18, 26, 0.94);
+  --bg-surface-strong: rgba(14, 18, 26, 0.98);
+}
+
+[data-tv="true"] .sky-card,
+[data-tv="true"] .sky-card-interactive,
+[data-tv="true"] .sky-surface,
+[data-tv="true"] .sky-surface-strong {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 [data-tv="true"] button:focus,
@@ -224,7 +237,6 @@ input[type="range"].sky-range:hover::-webkit-slider-thumb {
 [data-tv="true"] .sky-card-interactive:focus {
   background-color: var(--bg-card-hover);
   border-color: #38bdf8;
-  transform: scale(1.03);
   position: relative;
   z-index: 5;
 }

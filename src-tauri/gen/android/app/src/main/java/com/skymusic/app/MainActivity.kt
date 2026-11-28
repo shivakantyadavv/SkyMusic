@@ -172,6 +172,14 @@ class MainActivity : TauriActivity() {
     }
   }
 
+  override fun onStop() {
+    super.onStop()
+    if (SkymusicMediaService.hasActiveTrack) {
+      webViewRef?.onResume()
+      webViewRef?.resumeTimers()
+    }
+  }
+
   override fun onDestroy() {
     if (isFinishing) {
       SkymusicMediaService.transportListener = null
