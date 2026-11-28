@@ -2,6 +2,12 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.6] - 2026-11-28
+
+### What's New
+- fix: Android full-song YouTube playback (was 30s preview)
+- fix: NowPlaying DOLBY ATMOS badge no longer overlaps seekbar
+
 ## [v1.5] - 2026-11-28
 
 ### What's New

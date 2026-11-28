@@ -1,11 +1,11 @@
 {
-  "version": "1.5.0",
-  "notes": "Fix Cloud Firestore Sync permission rules for track metadata & initial room creation; add Retry Sync and Sign Out controls in Connect dialog",
-  "pub_date": "2026-11-28T05:50:01.491Z",
+  "version": "1.6.0",
+  "notes": "fix: Android full-song YouTube playback (was 30s preview); fix: NowPlaying DOLBY ATMOS badge no longer overlaps seekbar",
+  "pub_date": "2026-11-28T06:05:27.049Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTRwNzh1akpTbkRuK0psdFJIZVdER2s0aFJnOHFobEdqWXN2dlBpQXZabld6WmEvcjhPZWc2T3Y4dzVscGxGQi94UThMdmlFejRIMTdFZngyd1UxNEEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ0Njg2CWZpbGU6U2t5bXVzaWNfMS41LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNS4wCjVLaDdlakppblprbzNCajJEMVlrT2RodGZxNUpzODZqcDhTOXdvRlB5bU5scm82QUhBU0tDcUdnR3d5bGJEVE1ESzNCUGo0VnJVcFAxakNzNzBLSURBPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.5/skymusic_v1.5_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTkwZWhtWDNvTjhaalZaQ3FucG10cHhva3NwOFNnb2FldTVnZXh0Y3gwbFhRcmwzS09IRm1naWxlRVUrdTdpWEJOdzZBOEpwaW5MQkF6WHRqbWkyOFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ1NTU3CWZpbGU6U2t5bXVzaWNfMS42LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNi4wCm51NkROZWxsOUFMVnJQZGJZK3VoamF6bTNCY2tnUk13enVMVXFLQk90TTVYclNKUERGUzZoYis0ZHdyaHNpSno4c2ZFRXJpWEVTbm5IaVA5QXRFakF3PT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.6/skymusic_v1.6_x64-setup.exe"
     }
   }
 }
