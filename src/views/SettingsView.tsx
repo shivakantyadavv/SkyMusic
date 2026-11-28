@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   Check,
   CheckCircle2,
+  Cloud,
   Disc3,
   FolderOpen,
   Loader2,
+  MonitorSmartphone,
   Moon,
   Music2,
   Palette,
@@ -13,10 +15,12 @@ import {
   Sun,
   Trash2,
   Tv,
+  Wifi,
 } from "lucide-react";
 import { ATMOS_PRESETS } from "../audio/spatialAudio";
 import { AtmosToggleButton } from "../components/AudioControlsBadges";
 import { usePlayer } from "../context/PlayerContext";
+import { useSync } from "../context/SyncContext";
 import { ThemeMode, useTheme } from "../context/ThemeContext";
 import { clearYoutubeCache } from "../services/youtubeResolver";
 import {
@@ -79,6 +83,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     clearQueue,
   } = usePlayer();
   const { theme, setTheme } = useTheme();
+  const {
+    deviceName,
+    isCloudConnected,
+    cloudLinkedEmail,
+    cloudStatus,
+    lanPeers,
+    lanSelfInfo,
+    openConnectModal,
+    syncCloudNow,
+    signOutCloud,
+  } = useSync();
   const tvMode = useTvMode();
   const [tvPref, setTvPref] = useState<TvModePreference>(() => getTvModePreference());
   const [notice, setNotice] = useState<string | null>(null);
@@ -375,6 +390,99 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Remote controls: D-Pad moves focus • OK selects or scrubs sliders •
           Media Play/Next/Prev work globally • Back closes overlays.
         </p>
+      </section>
+
+      {/* Cross-Device Cloud Sync, TV Pair Code & Wi-Fi Connect */}
+      <section className="sky-card space-y-4 rounded-2xl p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] text-white">
+              <MonitorSmartphone className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
+                Cloud Sync, TV Pairing &amp; Wi-Fi Cast
+              </h3>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                Sync Liked Songs, Playlists, Recently Played, Theme &amp; Dolby
+                Atmos across Windows, Android APK &amp; TV — plus cast songs over Wi-Fi.
+              </p>
+            </div>
+          </div>
+
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+              isCloudConnected
+                ? "bg-[#1DB954]/20 text-[#1DB954]"
+                : "bg-[var(--bg-subtle)] text-[var(--text-secondary)]"
+            }`}
+          >
+            {isCloudConnected ? "Cloud Synced" : "Local Only"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
+              <Cloud className="h-4 w-4 text-[#1DB954]" />
+              {isCloudConnected
+                ? cloudLinkedEmail || "Synced Room"
+                : "Not Signed In"}
+            </div>
+            <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
+              Device: {deviceName} • Status: {cloudStatus}
+            </p>
+          </div>
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
+              <Wifi className="h-4 w-4 text-[#38bdf8]" />
+              Wi-Fi Direct ({lanPeers.length} online)
+            </div>
+            <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
+              {lanSelfInfo?.ip && lanSelfInfo.ip !== "127.0.0.1"
+                ? `Address ${lanSelfInfo.ip}:${lanSelfInfo.port}`
+                : "Discovery active on local Wi-Fi"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openConnectModal("cloud")}
+            className="inline-flex items-center gap-2 rounded-full bg-[#0EA5E9] px-4 py-2 text-xs font-bold text-white hover:bg-[#0284C7]"
+          >
+            <Cloud className="h-3.5 w-3.5" />
+            {isCloudConnected ? "Pair TV / Account" : "Sign In or Pair TV"}
+          </button>
+          <button
+            type="button"
+            onClick={() => openConnectModal("devices")}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-subtle-hover)]"
+          >
+            <Wifi className="h-3.5 w-3.5" />
+            Wi-Fi Sync &amp; Cast to TV
+          </button>
+          {isCloudConnected && (
+            <>
+              <button
+                type="button"
+                onClick={() => syncCloudNow().catch(() => {})}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#1DB954] px-3.5 py-2 text-xs font-bold text-black hover:bg-[#1ed760]"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Sync Now
+              </button>
+              <button
+                type="button"
+                onClick={() => signOutCloud().catch(() => {})}
+                className="rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-red-400"
+              >
+                Unlink
+              </button>
+            </>
+          )}
+        </div>
       </section>
 
       {/* Local Music Storage */}

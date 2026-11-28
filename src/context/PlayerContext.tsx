@@ -23,10 +23,22 @@ import {
   DownloadProgressPayload,
   Playlist,
   RepeatMode,
+  SyncSnapshot,
+  SyncTombstoneMap,
   Track,
 } from "../types/music";
 import { getTrackBadgeQuality, StreamSourceKind } from "../utils/audioQuality";
+import { resolveTrackFromSync } from "../utils/syncMerge";
 import { isTvMode } from "../utils/tvNavigation";
+
+export interface PlayerSyncMeta {
+  likedTrackAddedAt: Record<string, number>;
+  deletedLikedAt: SyncTombstoneMap;
+  playlistUpdatedAt: Record<string, number>;
+  deletedPlaylistsAt: SyncTombstoneMap;
+  recentlyPlayedAt: Record<string, number>;
+  atmosUpdatedAt: number;
+}
 
 type ActiveBackend = "youtube" | "html5" | null;
 
@@ -65,6 +77,12 @@ interface PlayerContextValue {
   isNowPlayingOpen: boolean;
   setNowPlayingOpen: (open: boolean) => void;
   playTrack: (track: Track, contextList?: Track[]) => Promise<void>;
+  playTrackAt: (
+    track: Track,
+    startPosition?: number,
+    contextList?: Track[]
+  ) => Promise<void>;
+  setPlayState: (playing: boolean) => void;
   togglePlay: () => void;
   playNext: () => void;
   playPrev: () => void;
@@ -99,6 +117,10 @@ interface PlayerContextValue {
   deletePlaylist: (playlistId: string) => void;
   localTracks: Track[];
   importLocalTracks: () => Promise<void>;
+
+  // Cross-Device Sync Integration
+  syncMeta: PlayerSyncMeta;
+  applySyncedSnapshot: (snapshot: SyncSnapshot) => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -109,6 +131,18 @@ const VOLUME_KEY = "skymusic_volume";
 const RECENTLY_PLAYED_KEY = "skymusic_recently_played";
 const ATMOS_PRESET_KEY = "skymusic_atmos_preset";
 const DOWNLOADED_TRACKS_KEY = "skymusic_downloaded_tracks";
+const SYNC_META_KEY = "skymusic_sync_meta";
+
+function defaultSyncMeta(): PlayerSyncMeta {
+  return {
+    likedTrackAddedAt: {},
+    deletedLikedAt: {},
+    playlistUpdatedAt: {},
+    deletedPlaylistsAt: {},
+    recentlyPlayedAt: {},
+    atmosUpdatedAt: 0,
+  };
+}
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -130,6 +164,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const activeBackendRef = useRef<ActiveBackend>(null);
   const activeStreamKindRef = useRef<StreamSourceKind>(null);
   const playRequestIdRef = useRef(0);
+  const pendingSeekRef = useRef<number | null>(null);
   const ytCandidatesRef = useRef<string[]>([]);
   const ytCandidateIndexRef = useRef(0);
 
@@ -186,6 +221,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [downloadProgressMap, setDownloadProgressMap] = useState<
     Record<string, DownloadProgressPayload>
   >({});
+  const [syncMeta, setSyncMeta] = useState<PlayerSyncMeta>(() => ({
+    ...defaultSyncMeta(),
+    ...readJson<Partial<PlayerSyncMeta>>(SYNC_META_KEY, {}),
+  }));
 
   // Refs synced with latest state for event handlers
   const currentTrackRef = useRef<Track | null>(null);
@@ -237,6 +276,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(recentlyPlayed));
   }, [recentlyPlayed]);
+
+  useEffect(() => {
+    localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta));
+  }, [syncMeta]);
 
   // Resolve local HTTP bridge port + rehydrate downloaded files cleanly
   useEffect(() => {
@@ -290,6 +333,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const setAtmosPreset = useCallback((preset: AtmosPreset) => {
     spatialAudio.resume();
     setAtmosPresetState(preset);
+    setSyncMeta((prev) => ({ ...prev, atmosUpdatedAt: Date.now() }));
   }, []);
 
   const toggleAtmos = useCallback(() => {
@@ -297,6 +341,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setAtmosPresetState((prev) =>
       prev === "off" ? lastActiveAtmosRef.current || "music" : "off"
     );
+    setSyncMeta((prev) => ({ ...prev, atmosUpdatedAt: Date.now() }));
   }, []);
 
   const postToYtBridge = useCallback((payload: Record<string, unknown>) => {
@@ -355,13 +400,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [volume, isMuted, postToYtBridge]);
 
   const recordRecentlyPlayed = useCallback((track: Track) => {
+    const now = Date.now();
     setRecentlyPlayed((prev) =>
       [track, ...prev.filter((t) => t.id !== track.id)].slice(0, 20)
     );
+    setSyncMeta((prev) => ({
+      ...prev,
+      recentlyPlayedAt: { ...prev.recentlyPlayedAt, [track.id]: now },
+    }));
   }, []);
 
   const clearRecentlyPlayed = useCallback(() => {
     setRecentlyPlayed([]);
+    setSyncMeta((prev) => ({
+      ...prev,
+      recentlyPlayedAt: {},
+    }));
   }, []);
 
   const loadYoutubeVideoId = useCallback(
@@ -564,6 +618,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const playTrack = useCallback(
     async (track: Track, contextList?: Track[]) => {
+      pendingSeekRef.current = null;
       if (currentTrackRef.current) {
         setHistory((prev) => [...prev.slice(-29), currentTrackRef.current!]);
       }
@@ -575,6 +630,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             : contextList.filter((t) => t.id !== track.id);
         setQueue(remaining);
       }
+      await playTrackInternal(track);
+    },
+    [playTrackInternal]
+  );
+
+  const playTrackAt = useCallback(
+    async (track: Track, startPosition?: number, contextList?: Track[]) => {
+      if (currentTrackRef.current) {
+        setHistory((prev) => [...prev.slice(-29), currentTrackRef.current!]);
+      }
+      if (contextList && contextList.length > 0) {
+        const idx = contextList.findIndex((t) => t.id === track.id);
+        const remaining =
+          idx >= 0
+            ? contextList.slice(idx + 1)
+            : contextList.filter((t) => t.id !== track.id);
+        setQueue(remaining);
+      }
+      pendingSeekRef.current =
+        typeof startPosition === "number" && startPosition > 1
+          ? startPosition
+          : null;
       await playTrackInternal(track);
     },
     [playTrackInternal]
@@ -711,6 +788,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           setIsPlaying(true);
           setIsLoadingAudio(false);
           setAudioError(null);
+          if (pendingSeekRef.current !== null) {
+            const target = pendingSeekRef.current;
+            pendingSeekRef.current = null;
+            postToYtBridge({ type: "yt:seek", seconds: target });
+            setCurrentTime(target);
+          }
         } else if (state === 2) {
           setIsPlaying(false);
           setIsLoadingAudio(false);
@@ -779,7 +862,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       if (activeBackendRef.current === "html5") setIsLoadingAudio(true);
     };
     const onCanPlay = () => {
-      if (activeBackendRef.current === "html5") setIsLoadingAudio(false);
+      if (activeBackendRef.current === "html5") {
+        setIsLoadingAudio(false);
+        if (pendingSeekRef.current !== null) {
+          const target = pendingSeekRef.current;
+          pendingSeekRef.current = null;
+          audio.currentTime = target;
+          setCurrentTime(target);
+        }
+      }
     };
     const onError = () => {
       if (activeBackendRef.current !== "html5") return;
@@ -834,6 +925,26 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       audio.play().catch(() => {});
     }
   }, [currentTrack, isPlaying, postToYtBridge]);
+
+  const setPlayState = useCallback(
+    (playing: boolean) => {
+      if (!currentTrackRef.current) return;
+      if (activeBackendRef.current === "youtube") {
+        postToYtBridge({ type: playing ? "yt:play" : "yt:pause" });
+        setIsPlaying(playing);
+        return;
+      }
+      const audio = audioRef.current;
+      if (!audio) return;
+      spatialAudio.resume();
+      if (playing) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
+    },
+    [postToYtBridge]
+  );
 
   const seekTo = useCallback(
     (seconds: number) => {
@@ -1018,25 +1129,50 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const toggleLike = useCallback((track: Track) => {
+    const now = Date.now();
     setLikedTracks((prev) => {
       const exists = prev.some((t) => t.id === track.id);
+      setSyncMeta((meta) => {
+        if (exists) {
+          const nextAdded = { ...meta.likedTrackAddedAt };
+          delete nextAdded[track.id];
+          return {
+            ...meta,
+            likedTrackAddedAt: nextAdded,
+            deletedLikedAt: { ...meta.deletedLikedAt, [track.id]: now },
+          };
+        }
+        const nextDeleted = { ...meta.deletedLikedAt };
+        delete nextDeleted[track.id];
+        return {
+          ...meta,
+          likedTrackAddedAt: { ...meta.likedTrackAddedAt, [track.id]: now },
+          deletedLikedAt: nextDeleted,
+        };
+      });
       return exists ? prev.filter((t) => t.id !== track.id) : [track, ...prev];
     });
   }, []);
 
   const createPlaylist = useCallback((name: string, description?: string) => {
+    const now = Date.now();
     const newPl: Playlist = {
-      id: `pl-${Date.now()}`,
+      id: `pl-${now}`,
       name: name.trim() || "Untitled Playlist",
       description: description?.trim() || "Custom Skymusic playlist",
       tracks: [],
-      createdAt: Date.now(),
+      createdAt: now,
     };
     setPlaylists((prev) => [newPl, ...prev]);
+    setSyncMeta((meta) => ({
+      ...meta,
+      playlistUpdatedAt: { ...meta.playlistUpdatedAt, [newPl.id]: now },
+    }));
     return newPl;
   }, []);
 
   const addTrackToPlaylist = useCallback((playlistId: string, track: Track) => {
+    const now = Date.now();
     setPlaylists((prev) =>
       prev.map((pl) => {
         if (pl.id !== playlistId) return pl;
@@ -1048,10 +1184,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         };
       })
     );
+    setSyncMeta((meta) => ({
+      ...meta,
+      playlistUpdatedAt: { ...meta.playlistUpdatedAt, [playlistId]: now },
+    }));
   }, []);
 
   const removeTrackFromPlaylist = useCallback(
     (playlistId: string, trackId: string) => {
+      const now = Date.now();
       setPlaylists((prev) =>
         prev.map((pl) =>
           pl.id === playlistId
@@ -1059,13 +1200,64 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             : pl
         )
       );
+      setSyncMeta((meta) => ({
+        ...meta,
+        playlistUpdatedAt: { ...meta.playlistUpdatedAt, [playlistId]: now },
+      }));
     },
     []
   );
 
   const deletePlaylist = useCallback((playlistId: string) => {
+    const now = Date.now();
     setPlaylists((prev) => prev.filter((pl) => pl.id !== playlistId));
+    setSyncMeta((meta) => ({
+      ...meta,
+      deletedPlaylistsAt: { ...meta.deletedPlaylistsAt, [playlistId]: now },
+    }));
   }, []);
+
+  const applySyncedSnapshot = useCallback((snapshot: SyncSnapshot) => {
+    const localDlMap = new Map<string, Track>(
+      downloadedTracksRef.current.map((t) => [t.id, t])
+    );
+
+    const nextLiked = (snapshot.likedTracks || [])
+      .map((t) => resolveTrackFromSync(t, localDlMap))
+      .filter((t): t is Track => Boolean(t));
+    const nextPlaylists = (snapshot.playlists || []).map((pl) => ({
+      ...pl,
+      tracks: (pl.tracks || [])
+        .map((t) => resolveTrackFromSync(t, localDlMap))
+        .filter((t): t is Track => Boolean(t)),
+    }));
+    const nextRecent = (snapshot.recentlyPlayed || [])
+      .map((t) => resolveTrackFromSync(t, localDlMap))
+      .filter((t): t is Track => Boolean(t))
+      .slice(0, 20);
+
+    setLikedTracks(nextLiked);
+    setPlaylists(nextPlaylists);
+    setRecentlyPlayed(nextRecent);
+    if (
+      snapshot.preferences &&
+      (snapshot.preferences.updatedAt || 0) > syncMeta.atmosUpdatedAt &&
+      snapshot.preferences.atmosPreset
+    ) {
+      setAtmosPresetState(snapshot.preferences.atmosPreset);
+    }
+    setSyncMeta((prev) => ({
+      likedTrackAddedAt: snapshot.likedTrackAddedAt || prev.likedTrackAddedAt,
+      deletedLikedAt: snapshot.deletedLikedAt || prev.deletedLikedAt,
+      playlistUpdatedAt: snapshot.playlistUpdatedAt || prev.playlistUpdatedAt,
+      deletedPlaylistsAt: snapshot.deletedPlaylistsAt || prev.deletedPlaylistsAt,
+      recentlyPlayedAt: snapshot.recentlyPlayedAt || prev.recentlyPlayedAt,
+      atmosUpdatedAt: Math.max(
+        prev.atmosUpdatedAt,
+        snapshot.preferences?.updatedAt || 0
+      ),
+    }));
+  }, [syncMeta.atmosUpdatedAt]);
 
   const importLocalTracks = useCallback(async () => {
     const picked = await pickLocalAudioFiles();
@@ -1220,6 +1412,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         isNowPlayingOpen,
         setNowPlayingOpen,
         playTrack,
+        playTrackAt,
+        setPlayState,
         togglePlay,
         playNext,
         playPrev,
@@ -1248,6 +1442,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         deletePlaylist,
         localTracks,
         importLocalTracks,
+        syncMeta,
+        applySyncedSnapshot,
       }}
     >
       {children}

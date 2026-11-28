@@ -1,0 +1,517 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: users
+// Document ID: {uid} (Firebase Auth UID)
+// Fields:
+//   - uid: string (required, immutable, == document {uid}, 1..128 chars)
+//   - email: string | null (optional, <= 320 chars, valid email if non-empty)
+//   - displayName: string | null (optional, <= 100 chars)
+//   - activeRoomId: string (required, 1..128 chars)
+//   - updatedAt: number (required, >= 0)
+//
+// Collection: syncRooms
+// Document ID: {roomId} (1..128 chars)
+// Fields:
+//   - ownerUid: string (required, immutable, 1..128 chars)
+//   - memberUids: list<string> (required, 1..15 UID strings of 1..128 chars; mutable only by ownerUid, ownerUid must remain a member)
+//   - updatedAt: number (required, >= 0)
+//   - snapshot: map (required)
+//     - version: int (required, == 1)
+//     - updatedAt: number (required, >= 0)
+//     - updatedByDeviceId: string (required, <= 128 chars)
+//     - updatedByDeviceName: string (required, <= 128 chars)
+//     - likedTracks: list (required, <= 500 items)
+//     - likedTrackAddedAt: map (required, <= 600 keys)
+//     - deletedLikedAt: map (required, <= 500 keys)
+//     - playlists: list (required, <= 100 items)
+//     - playlistUpdatedAt: map (required, <= 150 keys)
+//     - deletedPlaylistsAt: map (required, <= 500 keys)
+//     - recentlyPlayed: list (required, <= 25 items)
+//     - recentlyPlayedAt: map (required, <= 50 keys)
+//     - preferences: map (required: theme in ['dark', 'light', 'glass'], atmosPreset in ['music', 'movie', 'bass', 'off'], updatedAt: number >= 0)
+//     - continueListening: map | null (required key; if map: track, position, duration, isPlaying, deviceId, deviceName, updatedAt)
+//
+// Subcollection: syncRooms/{roomId}/devices
+// Document ID: {deviceId} (1..128 chars)
+// Fields:
+//   - deviceId: string (required, == document {deviceId}, 1..128 chars)
+//   - deviceName: string (required, <= 128 chars)
+//   - platform: string (required, in ['desktop', 'tv', 'mobile'])
+//   - appVersion: string (required, <= 64 chars)
+//   - ownerUid: string (required, 1..128 chars, must be in parent room memberUids)
+//   - nowPlaying: map | null (optional: title, artist, artwork?, trackId?, isPlaying, position, duration)
+//   - lastSeenAt: number (required, >= 0)
+//
+// Subcollection: syncRooms/{roomId}/commands
+// Document ID: {cmdId}
+// Immutable after creation (updates disallowed).
+// Fields:
+//   - targetDeviceId: string (required, 1..128 chars)
+//   - action: string (required, in ['play_track', 'play', 'pause', 'toggle', 'next', 'prev', 'seek', 'set_volume', 'set_atmos', 'sync_now'])
+//   - fromDeviceId: string (required, 1..128 chars)
+//   - fromDeviceName: string (required, <= 128 chars)
+//   - track: map | null (optional)
+//   - queue: list | null (optional, <= 100 items)
+//   - position: number | null (optional, >= 0)
+//   - volume: number | null (optional, 0..100)
+//   - muted: bool | null (optional)
+//   - atmosPreset: string | null (optional, in ['music', 'movie', 'bass', 'off'])
+//   - timestamp: number (required, >= 0)
+//
+// Collection: tvPairCodes
+// Document ID: {code} (6 numeric digits: ^[0-9]{6}$)
+// List queries are explicitly denied to prevent brute-force enumeration.
+// Fields:
+//   - code: string (required, immutable, == document {code}, matches ^[0-9]{6}$)
+//   - tvUid: string (required, immutable, == request.auth.uid on create, 1..128 chars)
+//   - tvDeviceId: string (required, immutable, 1..128 chars)
+//   - tvDeviceName: string (required, immutable, <= 128 chars)
+//   - status: string (required, 'waiting' on create -> 'linked' on update)
+//   - roomId: string | null (required key: null on create, 1..128 chars on update)
+//   - linkedByUid: string | null (required key: null on create, == request.auth.uid on update)
+//   - linkedByEmail: string | null (optional, <= 320 chars)
+//   - linkedAt: number | null (optional, >= 0)
+//   - createdAt: number (required, immutable, >= 0)
+//   - expiresAt: number (required, immutable, > createdAt)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function mapHasRequiredKeys(mapData, fields) {
+      return mapData is map && mapData.keys().hasAll(fields);
+    }
+
+    function mapHasOnlyKeys(mapData, fields) {
+      return mapData is map && mapData.keys().hasOnly(fields);
+    }
+
+    function isNonEmptyString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    function isBoundedString(val, maxLen) {
+      return val is string && val.size() <= maxLen;
+    }
+
+    function isNonNegativeNumber(val) {
+      return val is number && val >= 0;
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 320 &&
+        email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
+    }
+
+    function isValidOptionalNullableEmail(data, field) {
+      return !(field in data) ||
+        data[field] == null ||
+        (data[field] is string &&
+         data[field].size() <= 320 &&
+         (data[field].size() == 0 || isValidEmail(data[field])));
+    }
+
+    function isValidOptionalNullableString(data, field, maxLen) {
+      return !(field in data) ||
+        data[field] == null ||
+        isBoundedString(data[field], maxLen);
+    }
+
+    function isValidUidString(val) {
+      return isNonEmptyString(val, 128);
+    }
+
+    function isValidMemberUids(uids) {
+      return uids is list &&
+        uids.size() >= 1 &&
+        uids.size() <= 15 &&
+        (uids.size() < 1 || isValidUidString(uids[0])) &&
+        (uids.size() < 2 || isValidUidString(uids[1])) &&
+        (uids.size() < 3 || isValidUidString(uids[2])) &&
+        (uids.size() < 4 || isValidUidString(uids[3])) &&
+        (uids.size() < 5 || isValidUidString(uids[4])) &&
+        (uids.size() < 6 || isValidUidString(uids[5])) &&
+        (uids.size() < 7 || isValidUidString(uids[6])) &&
+        (uids.size() < 8 || isValidUidString(uids[7])) &&
+        (uids.size() < 9 || isValidUidString(uids[8])) &&
+        (uids.size() < 10 || isValidUidString(uids[9])) &&
+        (uids.size() < 11 || isValidUidString(uids[10])) &&
+        (uids.size() < 12 || isValidUidString(uids[11])) &&
+        (uids.size() < 13 || isValidUidString(uids[12])) &&
+        (uids.size() < 14 || isValidUidString(uids[13])) &&
+        (uids.size() < 15 || isValidUidString(uids[14]));
+    }
+
+    function isValidAtmosPreset(preset) {
+      return preset is string && preset in ['music', 'movie', 'bass', 'off'];
+    }
+
+    function isValidThemeMode(theme) {
+      return theme is string && theme in ['dark', 'light', 'glass'];
+    }
+
+    function roomDocPath(roomId) {
+      return /databases/$(database)/documents/syncRooms/$(roomId);
+    }
+
+    function isRoomMember(roomId) {
+      return isAuthenticated() &&
+        exists(roomDocPath(roomId)) &&
+        request.auth.uid in get(roomDocPath(roomId)).data.memberUids;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidTrackQuality(q) {
+      return q == null || (
+        q is map &&
+        mapHasRequiredKeys(q, ['badge', 'detail', 'tier']) &&
+        mapHasOnlyKeys(q, [
+          'badge', 'detail', 'codec', 'bitrateKbps',
+          'sampleRateHz', 'bitDepth', 'tier'
+        ]) &&
+        isBoundedString(q.badge, 64) &&
+        isBoundedString(q.detail, 128) &&
+        q.tier is string && q.tier in ['lossless', 'atmos', 'hq', 'preview', 'unknown'] &&
+        isValidOptionalNullableString(q, 'codec', 64) &&
+        (!('bitrateKbps' in q) || q.bitrateKbps == null || isNonNegativeNumber(q.bitrateKbps)) &&
+        (!('sampleRateHz' in q) || q.sampleRateHz == null || isNonNegativeNumber(q.sampleRateHz)) &&
+        (!('bitDepth' in q) || q.bitDepth == null || isNonNegativeNumber(q.bitDepth))
+      );
+    }
+
+    function isValidTrack(t) {
+      return t is map &&
+        mapHasRequiredKeys(t, ['id', 'title', 'artist', 'source']) &&
+        mapHasOnlyKeys(t, [
+          'id', 'title', 'artist', 'album', 'albumArt', 'duration',
+          'streamUrl', 'source', 'externalUrl', 'artistId', 'albumId',
+          'localPath', 'fileName', 'downloadedAt', 'quality', 'ytVideoId'
+        ]) &&
+        isNonEmptyString(t.id, 512) &&
+        isBoundedString(t.title, 500) &&
+        isBoundedString(t.artist, 500) &&
+        isValidOptionalNullableString(t, 'album', 500) &&
+        isValidOptionalNullableString(t, 'albumArt', 32768) &&
+        (!('duration' in t) || t.duration == null || isNonNegativeNumber(t.duration)) &&
+        isValidOptionalNullableString(t, 'streamUrl', 4096) &&
+        t.source is string && t.source in ['deezer', 'itunes', 'local', 'downloaded'] &&
+        isValidOptionalNullableString(t, 'externalUrl', 2048) &&
+        (!('artistId' in t) || t.artistId == null || t.artistId is number || isBoundedString(t.artistId, 128)) &&
+        (!('albumId' in t) || t.albumId == null || t.albumId is number || isBoundedString(t.albumId, 128)) &&
+        isValidOptionalNullableString(t, 'localPath', 1024) &&
+        isValidOptionalNullableString(t, 'fileName', 512) &&
+        (!('downloadedAt' in t) || t.downloadedAt == null || isNonNegativeNumber(t.downloadedAt)) &&
+        (!('quality' in t) || isValidTrackQuality(t.quality)) &&
+        isValidOptionalNullableString(t, 'ytVideoId', 64);
+    }
+
+    function isValidUser(data, uid) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'activeRoomId', 'updatedAt']) &&
+        hasRequiredFields(['uid', 'activeRoomId', 'updatedAt']) &&
+        isValidUidString(data.uid) &&
+        data.uid == uid &&
+        isValidOptionalNullableEmail(data, 'email') &&
+        isValidOptionalNullableString(data, 'displayName', 100) &&
+        isNonEmptyString(data.activeRoomId, 128) &&
+        isNonNegativeNumber(data.updatedAt);
+    }
+
+    function isValidSyncPreferences(prefs) {
+      return prefs is map &&
+        mapHasRequiredKeys(prefs, ['theme', 'atmosPreset', 'updatedAt']) &&
+        mapHasOnlyKeys(prefs, ['theme', 'atmosPreset', 'updatedAt']) &&
+        isValidThemeMode(prefs.theme) &&
+        isValidAtmosPreset(prefs.atmosPreset) &&
+        isNonNegativeNumber(prefs.updatedAt);
+    }
+
+    function isValidContinueListening(cl) {
+      return cl == null || (
+        cl is map &&
+        mapHasRequiredKeys(cl, [
+          'track', 'position', 'duration', 'isPlaying',
+          'deviceId', 'deviceName', 'updatedAt'
+        ]) &&
+        mapHasOnlyKeys(cl, [
+          'track', 'position', 'duration', 'isPlaying',
+          'deviceId', 'deviceName', 'updatedAt'
+        ]) &&
+        (cl.track == null || isValidTrack(cl.track)) &&
+        isNonNegativeNumber(cl.position) &&
+        isNonNegativeNumber(cl.duration) &&
+        cl.isPlaying is bool &&
+        isBoundedString(cl.deviceId, 128) &&
+        isBoundedString(cl.deviceName, 128) &&
+        isNonNegativeNumber(cl.updatedAt)
+      );
+    }
+
+    function isValidSyncSnapshot(snap) {
+      return snap is map &&
+        mapHasRequiredKeys(snap, [
+          'version', 'updatedAt', 'updatedByDeviceId', 'updatedByDeviceName',
+          'likedTracks', 'likedTrackAddedAt', 'deletedLikedAt',
+          'playlists', 'playlistUpdatedAt', 'deletedPlaylistsAt',
+          'recentlyPlayed', 'recentlyPlayedAt', 'preferences', 'continueListening'
+        ]) &&
+        mapHasOnlyKeys(snap, [
+          'version', 'updatedAt', 'updatedByDeviceId', 'updatedByDeviceName',
+          'likedTracks', 'likedTrackAddedAt', 'deletedLikedAt',
+          'playlists', 'playlistUpdatedAt', 'deletedPlaylistsAt',
+          'recentlyPlayed', 'recentlyPlayedAt', 'preferences', 'continueListening'
+        ]) &&
+        snap.version is int && snap.version == 1 &&
+        isNonNegativeNumber(snap.updatedAt) &&
+        isBoundedString(snap.updatedByDeviceId, 128) &&
+        isBoundedString(snap.updatedByDeviceName, 128) &&
+        snap.likedTracks is list && snap.likedTracks.size() <= 500 &&
+        snap.likedTrackAddedAt is map && snap.likedTrackAddedAt.size() <= 600 &&
+        snap.deletedLikedAt is map && snap.deletedLikedAt.size() <= 500 &&
+        snap.playlists is list && snap.playlists.size() <= 100 &&
+        snap.playlistUpdatedAt is map && snap.playlistUpdatedAt.size() <= 150 &&
+        snap.deletedPlaylistsAt is map && snap.deletedPlaylistsAt.size() <= 500 &&
+        snap.recentlyPlayed is list && snap.recentlyPlayed.size() <= 25 &&
+        snap.recentlyPlayedAt is map && snap.recentlyPlayedAt.size() <= 50 &&
+        isValidSyncPreferences(snap.preferences) &&
+        isValidContinueListening(snap.continueListening);
+    }
+
+    function isValidSyncRoom(data, roomId) {
+      return isNonEmptyString(roomId, 128) &&
+        hasOnlyAllowedFields(['ownerUid', 'memberUids', 'updatedAt', 'snapshot']) &&
+        hasRequiredFields(['ownerUid', 'memberUids', 'updatedAt', 'snapshot']) &&
+        isValidUidString(data.ownerUid) &&
+        isValidMemberUids(data.memberUids) &&
+        data.ownerUid in data.memberUids &&
+        isNonNegativeNumber(data.updatedAt) &&
+        isValidSyncSnapshot(data.snapshot);
+    }
+
+    function isValidNowPlaying(np) {
+      return np == null || (
+        np is map &&
+        mapHasRequiredKeys(np, ['title', 'artist', 'isPlaying', 'position', 'duration']) &&
+        mapHasOnlyKeys(np, ['title', 'artist', 'artwork', 'trackId', 'isPlaying', 'position', 'duration']) &&
+        isBoundedString(np.title, 500) &&
+        isBoundedString(np.artist, 500) &&
+        isValidOptionalNullableString(np, 'artwork', 32768) &&
+        isValidOptionalNullableString(np, 'trackId', 512) &&
+        np.isPlaying is bool &&
+        isNonNegativeNumber(np.position) &&
+        isNonNegativeNumber(np.duration)
+      );
+    }
+
+    function isValidDevicePresence(data, deviceId, roomId) {
+      return isNonEmptyString(deviceId, 128) &&
+        hasOnlyAllowedFields([
+          'deviceId', 'deviceName', 'platform', 'appVersion',
+          'ownerUid', 'nowPlaying', 'lastSeenAt'
+        ]) &&
+        hasRequiredFields([
+          'deviceId', 'deviceName', 'platform', 'appVersion',
+          'ownerUid', 'lastSeenAt'
+        ]) &&
+        data.deviceId is string && data.deviceId == deviceId &&
+        isBoundedString(data.deviceName, 128) &&
+        data.platform is string && data.platform in ['desktop', 'tv', 'mobile'] &&
+        isBoundedString(data.appVersion, 64) &&
+        isValidUidString(data.ownerUid) &&
+        data.ownerUid in get(roomDocPath(roomId)).data.memberUids &&
+        (!('nowPlaying' in data) || isValidNowPlaying(data.nowPlaying)) &&
+        isNonNegativeNumber(data.lastSeenAt);
+    }
+
+    function isValidCommand(data) {
+      return hasOnlyAllowedFields([
+          'targetDeviceId', 'action', 'fromDeviceId', 'fromDeviceName',
+          'track', 'queue', 'position', 'volume', 'muted', 'atmosPreset', 'timestamp'
+        ]) &&
+        hasRequiredFields([
+          'targetDeviceId', 'action', 'fromDeviceId', 'fromDeviceName', 'timestamp'
+        ]) &&
+        isNonEmptyString(data.targetDeviceId, 128) &&
+        data.action is string &&
+        data.action in [
+          'play_track', 'play', 'pause', 'toggle', 'next',
+          'prev', 'seek', 'set_volume', 'set_atmos', 'sync_now'
+        ] &&
+        isNonEmptyString(data.fromDeviceId, 128) &&
+        isBoundedString(data.fromDeviceName, 128) &&
+        (!('track' in data) || data.track == null || isValidTrack(data.track)) &&
+        (!('queue' in data) || data.queue == null || (data.queue is list && data.queue.size() <= 100)) &&
+        (!('position' in data) || data.position == null || isNonNegativeNumber(data.position)) &&
+        (!('volume' in data) || data.volume == null || (data.volume is number && data.volume >= 0 && data.volume <= 100)) &&
+        (!('muted' in data) || data.muted == null || data.muted is bool) &&
+        (!('atmosPreset' in data) || data.atmosPreset == null || isValidAtmosPreset(data.atmosPreset)) &&
+        isNonNegativeNumber(data.timestamp);
+    }
+
+    function isValidTvPairCodeBase(data, code) {
+      return code.matches('^[0-9]{6}$') &&
+        hasOnlyAllowedFields([
+          'code', 'tvUid', 'tvDeviceId', 'tvDeviceName', 'status',
+          'roomId', 'linkedByUid', 'linkedByEmail', 'linkedAt',
+          'createdAt', 'expiresAt'
+        ]) &&
+        hasRequiredFields([
+          'code', 'tvUid', 'tvDeviceId', 'tvDeviceName', 'status',
+          'roomId', 'linkedByUid', 'createdAt', 'expiresAt'
+        ]) &&
+        data.code is string && data.code == code &&
+        isValidUidString(data.tvUid) &&
+        isNonEmptyString(data.tvDeviceId, 128) &&
+        isBoundedString(data.tvDeviceName, 128) &&
+        data.status is string && data.status in ['waiting', 'linked'] &&
+        isValidOptionalNullableEmail(data, 'linkedByEmail') &&
+        (!('linkedAt' in data) || data.linkedAt == null || isNonNegativeNumber(data.linkedAt)) &&
+        isNonNegativeNumber(data.createdAt) &&
+        data.expiresAt is number &&
+        data.expiresAt > data.createdAt;
+    }
+
+    function isValidTvPairCodeCreate(data, code) {
+      return isValidTvPairCodeBase(data, code) &&
+        data.tvUid == request.auth.uid &&
+        data.status == 'waiting' &&
+        data.roomId == null &&
+        data.linkedByUid == null &&
+        (!('linkedByEmail' in data) || data.linkedByEmail == null) &&
+        (!('linkedAt' in data) || data.linkedAt == null);
+    }
+
+    function isValidTvPairCodeUpdate(newData, oldData, code) {
+      return isValidTvPairCodeBase(newData, code) &&
+        oldData.status == 'waiting' &&
+        newData.status == 'linked' &&
+        newData.tvUid == oldData.tvUid &&
+        newData.code == oldData.code &&
+        newData.tvDeviceId == oldData.tvDeviceId &&
+        newData.tvDeviceName == oldData.tvDeviceName &&
+        newData.createdAt == oldData.createdAt &&
+        newData.expiresAt == oldData.expiresAt &&
+        newData.linkedByUid == request.auth.uid &&
+        isNonEmptyString(newData.roomId, 128) &&
+        newData.diff(oldData).affectedKeys().hasOnly([
+          'status', 'roomId', 'linkedByUid', 'linkedByEmail', 'linkedAt'
+        ]);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Private per-user profile document.
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) &&
+        uidUnchanged() &&
+        isValidUser(request.resource.data, uid);
+      allow update: if isOwner(uid) &&
+        uidNotModified() &&
+        isValidUser(request.resource.data, uid);
+      allow delete: if isOwner(uid);
+    }
+
+    // Shared household sync rooms across Desktop, Mobile, and TV.
+    match /syncRooms/{roomId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.ownerUid ||
+         request.auth.uid in resource.data.memberUids);
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.auth.uid in request.resource.data.memberUids &&
+        isValidSyncRoom(request.resource.data, roomId);
+
+      allow update: if isAuthenticated() &&
+        request.auth.uid in resource.data.memberUids &&
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        resource.data.ownerUid in request.resource.data.memberUids &&
+        (request.auth.uid == resource.data.ownerUid ||
+         request.resource.data.memberUids == resource.data.memberUids) &&
+        isValidSyncRoom(request.resource.data, roomId);
+
+      allow delete: if isAuthenticated() &&
+        request.auth.uid == resource.data.ownerUid;
+
+      // Live device presence within an authorized room.
+      match /devices/{deviceId} {
+        allow read: if isRoomMember(roomId);
+        allow create: if isRoomMember(roomId) &&
+          isValidDevicePresence(request.resource.data, deviceId, roomId);
+        allow update: if isRoomMember(roomId) &&
+          isValidDevicePresence(request.resource.data, deviceId, roomId);
+        allow delete: if isRoomMember(roomId);
+      }
+
+      // Immutable cloud remote Cast commands within an authorized room.
+      match /commands/{cmdId} {
+        allow read: if isRoomMember(roomId);
+        allow create: if isRoomMember(roomId) &&
+          isValidCommand(request.resource.data);
+        allow update: if false;
+        allow delete: if isRoomMember(roomId);
+      }
+    }
+
+    // Ephemeral 6-digit TV pairing handshake codes.
+    match /tvPairCodes/{code} {
+      allow list: if false;
+      allow get: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        isValidTvPairCodeCreate(request.resource.data, code);
+      allow update: if isAuthenticated() &&
+        isValidTvPairCodeUpdate(request.resource.data, resource.data, code);
+      allow delete: if isAuthenticated() &&
+        (('tvUid' in resource.data && resource.data.tvUid == request.auth.uid) ||
+         ('linkedByUid' in resource.data && resource.data.linkedByUid == request.auth.uid));
+    }
+
+    // Deny all other paths by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

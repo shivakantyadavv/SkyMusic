@@ -1,4 +1,5 @@
 mod audio_ops;
+mod lan_sync;
 mod yt_stream;
 
 use std::fs::File;
@@ -10,6 +11,10 @@ use tauri::{Emitter, Manager};
 use audio_ops::{
     download_track_hq, mime_type_for_path, register_local_audio, resolve_yt_playback_url,
     BridgePort, LocalFileRegistry,
+};
+use lan_sync::{
+    get_lan_devices, init_lan_sync, probe_lan_ip, refresh_lan_discovery, send_lan_cast,
+    start_lan_sync_service, sync_with_lan_peer, update_lan_snapshot,
 };
 use yt_stream::{resolve_yt_stream, search_youtube_ids_internal, shared_http};
 
@@ -472,6 +477,8 @@ pub fn run() {
         .setup(|app| {
             let port = start_yt_bridge_server(app.handle().clone());
             app.manage(BridgePort(port));
+            let lan_state = start_lan_sync_service(app.handle().clone());
+            app.manage(lan_state);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -481,7 +488,14 @@ pub fn run() {
             search_youtube_ids,
             register_local_audio,
             resolve_yt_playback_url,
-            download_track_hq
+            download_track_hq,
+            init_lan_sync,
+            update_lan_snapshot,
+            get_lan_devices,
+            refresh_lan_discovery,
+            probe_lan_ip,
+            sync_with_lan_peer,
+            send_lan_cast
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

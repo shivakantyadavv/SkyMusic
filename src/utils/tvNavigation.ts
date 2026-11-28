@@ -120,7 +120,7 @@ export function onTvCardKeyDown(
 }
 
 function getActiveScope(): HTMLElement {
-  const scopes = ["update", "queue", "now-playing"];
+  const scopes = ["update", "connect", "queue", "now-playing"];
   for (const name of scopes) {
     const el = document.querySelector<HTMLElement>(`[data-tv-scope="${name}"]`);
     if (el && el.getAttribute("data-open") !== "false" && !el.hasAttribute("inert")) {

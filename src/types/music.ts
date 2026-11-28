@@ -119,3 +119,103 @@ export type DetailRoute =
   | { type: "playlist"; section: HomeSection }
   | { type: "artist"; artist: ArtistItem }
   | { type: "album"; album: AlbumItem };
+
+export type SyncThemeMode = "dark" | "light" | "glass";
+export type SyncTombstoneMap = Record<string, number>;
+
+export interface SyncContinueListening {
+  track: Track | null;
+  position: number;
+  duration: number;
+  isPlaying: boolean;
+  deviceId: string;
+  deviceName: string;
+  updatedAt: number;
+}
+
+export interface SyncPreferences {
+  theme: SyncThemeMode;
+  atmosPreset: AtmosPreset;
+  updatedAt: number;
+}
+
+export interface SyncSnapshot {
+  version: 1;
+  updatedAt: number;
+  updatedByDeviceId: string;
+  updatedByDeviceName: string;
+  likedTracks: Track[];
+  likedTrackAddedAt: Record<string, number>;
+  deletedLikedAt: SyncTombstoneMap;
+  playlists: Playlist[];
+  playlistUpdatedAt: Record<string, number>;
+  deletedPlaylistsAt: SyncTombstoneMap;
+  recentlyPlayed: Track[];
+  recentlyPlayedAt: Record<string, number>;
+  preferences: SyncPreferences;
+  continueListening: SyncContinueListening | null;
+}
+
+export interface LanNowPlayingSummary {
+  title: string;
+  artist: string;
+  artwork?: string | null;
+  trackId?: string | null;
+  isPlaying: boolean;
+  position: number;
+  duration: number;
+}
+
+export interface LanDeviceInfo {
+  deviceId: string;
+  deviceName: string;
+  platform: string;
+  appVersion: string;
+  ip: string;
+  port: number;
+  roomId?: string | null;
+  requiresPin: boolean;
+  nowPlaying?: LanNowPlayingSummary | null;
+  updatedAt: number;
+  lastSeenMs: number;
+}
+
+export interface LanDiscoveryResult {
+  selfInfo: LanDeviceInfo;
+  peers: LanDeviceInfo[];
+}
+
+export type LanCastAction =
+  | "play_track"
+  | "play"
+  | "pause"
+  | "toggle"
+  | "next"
+  | "prev"
+  | "seek"
+  | "set_volume"
+  | "set_atmos"
+  | "sync_now";
+
+export interface LanCastCommand {
+  action: LanCastAction;
+  fromDeviceId: string;
+  fromDeviceName: string;
+  track?: Track | null;
+  queue?: Track[] | null;
+  position?: number | null;
+  volume?: number | null;
+  muted?: boolean | null;
+  atmosPreset?: AtmosPreset | null;
+  pin?: string | null;
+  timestamp: number;
+}
+
+export interface SyncDevicePresence {
+  deviceId: string;
+  deviceName: string;
+  platform: "desktop" | "tv" | "mobile";
+  appVersion: string;
+  nowPlaying?: LanNowPlayingSummary | null;
+  lastSeenAt: number;
+}

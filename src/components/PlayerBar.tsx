@@ -4,6 +4,7 @@ import {
   Heart,
   ListMusic,
   Loader2,
+  MonitorSmartphone,
   Pause,
   Play,
   Repeat,
@@ -15,6 +16,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
+import { useSync } from "../context/SyncContext";
 import { formatTime } from "../utils/formatTime";
 import { AtmosToggleButton, QualityBadge } from "./AudioControlsBadges";
 
@@ -46,6 +48,18 @@ export const PlayerBar: React.FC = () => {
     isLiked,
     toggleLike,
   } = usePlayer();
+  const {
+    openConnectModal,
+    lanPeers,
+    cloudDevices,
+    activeCastTarget,
+    isCloudConnected,
+  } = useSync();
+
+  const onlineDevicesCount = new Set([
+    ...lanPeers.map((p) => p.deviceId),
+    ...cloudDevices.map((d) => d.deviceId),
+  ]).size;
 
   const progressPct =
     duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
@@ -254,11 +268,34 @@ export const PlayerBar: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Dolby Atmos, Queue & Volume */}
+        {/* Right: Dolby Atmos, Connect/Cast, Queue & Volume */}
         <div className="flex items-center justify-end gap-2 md:w-1/4">
           <div className="hidden sm:inline-flex">
             <AtmosToggleButton compact />
           </div>
+          <button
+            type="button"
+            onClick={() => openConnectModal("devices")}
+            className="relative rounded-full p-2 transition-colors"
+            style={{
+              color:
+                activeCastTarget || isCloudConnected || onlineDevicesCount > 0
+                  ? "var(--accent-green)"
+                  : "var(--text-secondary)",
+            }}
+            title={
+              activeCastTarget
+                ? `Connected to ${activeCastTarget.deviceName}`
+                : "Connect to TV / Sync Devices"
+            }
+          >
+            <MonitorSmartphone className="h-4 w-4" />
+            {onlineDevicesCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#1DB954] px-1 text-[9px] font-bold text-black">
+                {onlineDevicesCount}
+              </span>
+            )}
+          </button>
           <button
             onClick={() => setQueueOpen(!isQueueOpen)}
             className="relative rounded-full p-2 transition-colors"

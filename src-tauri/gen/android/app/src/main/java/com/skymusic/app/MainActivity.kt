@@ -10,6 +10,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -40,6 +41,7 @@ class MainActivity : TauriActivity() {
   override val handleBackNavigation: Boolean = false
 
   private var webViewRef: WebView? = null
+  private var multicastLock: WifiManager.MulticastLock? = null
   private lateinit var voiceSearchLauncher: ActivityResultLauncher<Intent>
   private lateinit var backCallback: OnBackPressedCallback
 
@@ -105,6 +107,15 @@ class MainActivity : TauriActivity() {
     if (!isTvDevice()) {
       ensureAudioPermissionsIfNeeded()
     }
+
+    try {
+      val wifi = applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+      multicastLock = wifi?.createMulticastLock("skymusic_lan_sync")?.apply {
+        setReferenceCounted(false)
+        acquire()
+      }
+    } catch (_: Exception) {
+    }
   }
 
   fun ensureAudioPermissionsIfNeeded() {
@@ -166,6 +177,13 @@ class MainActivity : TauriActivity() {
       SkymusicMediaService.transportListener = null
       SkymusicMediaService.clear(this)
     }
+    try {
+      if (multicastLock?.isHeld == true) {
+        multicastLock?.release()
+      }
+      multicastLock = null
+    } catch (_: Exception) {
+    }
     super.onDestroy()
   }
 
@@ -211,6 +229,17 @@ class MainActivity : TauriActivity() {
     @JavascriptInterface
     fun isTv(): Boolean {
       return activity.isTvDevice()
+    }
+
+    @JavascriptInterface
+    fun getDeviceModel(): String {
+      return try {
+        val mfg = Build.MANUFACTURER.orEmpty().trim()
+        val model = Build.MODEL.orEmpty().trim()
+        if (model.lowercase().startsWith(mfg.lowercase())) model else "$mfg $model".trim()
+      } catch (_: Exception) {
+        if (activity.isTvDevice()) "Android TV" else "Android Phone"
+      }
     }
 
     @JavascriptInterface

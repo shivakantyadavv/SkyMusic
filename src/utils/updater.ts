@@ -32,6 +32,7 @@ declare global {
       installApk: (filePath: string) => boolean;
       openUrl: (url: string) => void;
       isTv?: () => boolean;
+      getDeviceModel?: () => string;
       setKeepScreenOn?: (keepOn: boolean) => void;
       hasVoiceSearch?: () => boolean;
       startVoiceSearch?: () => boolean;

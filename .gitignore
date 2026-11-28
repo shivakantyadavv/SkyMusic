@@ -18,4 +18,6 @@ src-tauri/gen/android/app/proguard-tauri.pro
 src-tauri/gen/android/tauri.settings.gradle
 
 build-*.log
+firebase-debug.log
+firestore-debug.log
 

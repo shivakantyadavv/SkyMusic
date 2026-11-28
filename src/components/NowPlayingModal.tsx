@@ -5,6 +5,7 @@ import {
   Heart,
   ListMusic,
   Loader2,
+  MonitorSmartphone,
   Pause,
   Play,
   Repeat,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigation } from "../context/NavigationContext";
 import { usePlayer } from "../context/PlayerContext";
+import { useSync } from "../context/SyncContext";
 import { fetchLyrics, LyricsResult } from "../services/lyricsApi";
 import { formatTime } from "../utils/formatTime";
 import { focusPrimaryInScope, useTvMode } from "../utils/tvNavigation";
@@ -55,6 +57,11 @@ export const NowPlayingModal: React.FC = () => {
   } = usePlayer();
 
   const { openArtist } = useNavigation();
+  const { openConnectModal, activeCastTarget, lanPeers, cloudDevices } = useSync();
+  const onlineCount = new Set([
+    ...lanPeers.map((p) => p.deviceId),
+    ...cloudDevices.map((d) => d.deviceId),
+  ]).size;
   const tvMode = useTvMode();
 
   const handleOpenCurrentArtist = () => {
@@ -414,6 +421,25 @@ export const NowPlayingModal: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <AtmosToggleButton compact />
+
+          <button
+            type="button"
+            onClick={() => openConnectModal("devices")}
+            className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-subtle)] transition hover:bg-[var(--bg-subtle-hover)] ${
+              activeCastTarget
+                ? "bg-[#1DB954]/20 text-[#1DB954]"
+                : "bg-[var(--bg-subtle)] text-[var(--text-primary)]"
+            }`}
+            title="Connect, Sync & Cast to TV"
+            aria-label="Connect, Sync & Cast to TV"
+          >
+            <MonitorSmartphone className="h-4 w-4" />
+            {onlineCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-[#1DB954] px-1 text-[9px] font-bold text-black">
+                {onlineCount}
+              </span>
+            )}
+          </button>
 
           <button
             onClick={() => setShowLyrics((prev) => !prev)}

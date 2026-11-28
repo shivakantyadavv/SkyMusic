@@ -4,11 +4,13 @@ import {
   FolderOpen,
   Home,
   Library,
+  MonitorSmartphone,
   Search,
   Settings,
   Tv,
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
+import { useSync } from "../context/SyncContext";
 import { NavTab } from "../types/music";
 import { useTvMode } from "../utils/tvNavigation";
 
@@ -19,7 +21,17 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { playlists, likedTracks, importLocalTracks } = usePlayer();
+  const {
+    openConnectModal,
+    isCloudConnected,
+    lanPeers,
+    cloudDevices,
+  } = useSync();
   const tvMode = useTvMode();
+  const onlineCount = new Set([
+    ...lanPeers.map((p) => p.deviceId),
+    ...cloudDevices.map((d) => d.deviceId),
+  ]).size;
 
   const navItems: { id: NavTab; label: string; icon: React.ReactNode }[] = [
     { id: "home", label: "Home", icon: <Home className="h-5 w-5" /> },
@@ -94,6 +106,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={() => openConnectModal("devices")}
+          className="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-[var(--bg-card-hover)]"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          <span className="flex items-center gap-3">
+            <MonitorSmartphone
+              className="h-5 w-5"
+              style={{
+                color:
+                  isCloudConnected || onlineCount > 0
+                    ? "var(--accent-green)"
+                    : "inherit",
+              }}
+            />
+            Connect &amp; Sync
+          </span>
+          {(onlineCount > 0 || isCloudConnected) && (
+            <span className="rounded-full bg-[#1DB954]/20 px-2 py-0.5 text-[10px] font-bold text-[#1DB954]">
+              {onlineCount > 0 ? onlineCount : "On"}
+            </span>
+          )}
+        </button>
       </nav>
 
       {/* Playlists & Local Files Shortcut */}

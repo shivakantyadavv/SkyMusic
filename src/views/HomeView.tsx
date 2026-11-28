@@ -3,8 +3,10 @@ import {
   ChevronRight,
   ListMusic,
   Loader2,
+  MonitorSmartphone,
   Play,
   RefreshCw,
+  X,
 } from "lucide-react";
 import {
   DownloadTrackButton,
@@ -12,12 +14,14 @@ import {
 } from "../components/AudioControlsBadges";
 import { useNavigation } from "../context/NavigationContext";
 import { usePlayer } from "../context/PlayerContext";
+import { useSync } from "../context/SyncContext";
 import {
   fetchHomeCatalog,
   fetchPopularArtists,
 } from "../services/musicApi";
 import { ArtistItem, HomeSection, Track } from "../types/music";
 import { getTrackBadgeQuality } from "../utils/audioQuality";
+import { formatTime } from "../utils/formatTime";
 import { onTvCardKeyDown, useTvMode } from "../utils/tvNavigation";
 
 type HomeChip =
@@ -51,6 +55,18 @@ export const HomeView: React.FC = () => {
     atmosPreset,
   } = usePlayer();
   const { openPlaylist, openArtist } = useNavigation();
+  const {
+    remoteContinueListening,
+    resumeContinueListening,
+    dismissContinueListening,
+    openConnectModal,
+    lanPeers,
+    cloudDevices,
+  } = useSync();
+  const onlineDeviceCount = new Set([
+    ...lanPeers.map((p) => p.deviceId),
+    ...cloudDevices.map((d) => d.deviceId),
+  ]).size;
 
   const tvMode = useTvMode();
   const [sections, setSections] = useState<HomeSection[]>([]);
@@ -201,20 +217,77 @@ export const HomeView: React.FC = () => {
               India &amp; Pakistan Charts • Bollywood, Coke Studio, Punjabi &amp; Classics
             </p>
           </div>
-          <button
-            onClick={() => loadCatalog(true)}
-            disabled={loading || refreshing}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)] disabled:opacity-60"
-            title="Mix fresh suggestions"
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${
-                loading || refreshing ? "animate-spin" : ""
-              }`}
-            />
-            {refreshing ? "Mixing..." : "Refresh Mix"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => openConnectModal("devices")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)]"
+              title="Sync & Cast to TV or PC"
+            >
+              <MonitorSmartphone
+                className={`h-3.5 w-3.5 ${
+                  onlineDeviceCount > 0 ? "text-[#1DB954]" : "text-[#38bdf8]"
+                }`}
+              />
+              {onlineDeviceCount > 0 ? `Devices (${onlineDeviceCount})` : "Pair TV"}
+            </button>
+            <button
+              onClick={() => loadCatalog(true)}
+              disabled={loading || refreshing}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle-hover)] disabled:opacity-60"
+              title="Mix fresh suggestions"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${
+                  loading || refreshing ? "animate-spin" : ""
+                }`}
+              />
+              {refreshing ? "Mixing..." : "Refresh Mix"}
+            </button>
+          </div>
         </div>
+
+        {/* Continue Listening across TV / Phone / Desktop */}
+        {remoteContinueListening?.track && (
+          <div className="sky-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#0EA5E9]/35 px-4 py-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <img
+                src={remoteContinueListening.track.albumArt}
+                alt=""
+                className="h-11 w-11 shrink-0 rounded-lg object-cover shadow"
+              />
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#38bdf8]">
+                  Continue from {remoteContinueListening.deviceName}
+                </p>
+                <p className="truncate text-sm font-bold text-[var(--text-primary)]">
+                  {remoteContinueListening.track.title} •{" "}
+                  <span className="font-normal text-[var(--text-secondary)]">
+                    {remoteContinueListening.track.artist}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={resumeContinueListening}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#1DB954] px-3.5 py-1.5 text-xs font-bold text-black hover:bg-[#1ed760]"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                Resume {formatTime(remoteContinueListening.position)}
+              </button>
+              <button
+                type="button"
+                onClick={dismissContinueListening}
+                className="rounded-full p-1.5 text-[var(--text-secondary)] hover:bg-[var(--bg-subtle-hover)]"
+                aria-label="Dismiss continue listening"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Category Chips */}
         <div className="flex flex-wrap items-center gap-2">

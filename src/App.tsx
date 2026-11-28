@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Disc3 } from "lucide-react";
+import { Disc3, MonitorSmartphone } from "lucide-react";
+import { ConnectModal } from "./components/ConnectModal";
 import { MobileNav } from "./components/MobileNav";
 import { NowPlayingModal } from "./components/NowPlayingModal";
 import { PlayerBar } from "./components/PlayerBar";
@@ -8,6 +9,7 @@ import { Sidebar } from "./components/Sidebar";
 import { UpdateModal } from "./components/UpdateModal";
 import { NavigationProvider, useNavigation } from "./context/NavigationContext";
 import { PlayerProvider, usePlayer } from "./context/PlayerContext";
+import { SyncProvider, useSync } from "./context/SyncContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import {
   installSpatialDpadNavigation,
@@ -36,6 +38,14 @@ const AppShell: React.FC = () => {
     isQueueOpen,
     setQueueOpen,
   } = usePlayer();
+  const {
+    isConnectOpen,
+    closeConnectModal,
+    openConnectModal,
+    isCloudConnected,
+    lanPeers,
+    cloudDevices,
+  } = useSync();
   const [availableUpdate, setAvailableUpdate] = useState<UpdateInfo | null>(
     null
   );
@@ -58,6 +68,10 @@ const AppShell: React.FC = () => {
     window.__skymusicHandleBack = () => {
       if (availableUpdate) {
         setAvailableUpdate(null);
+        return true;
+      }
+      if (isConnectOpen) {
+        closeConnectModal();
         return true;
       }
       if (isQueueOpen) {
@@ -88,6 +102,8 @@ const AppShell: React.FC = () => {
     activeTab,
     availableUpdate,
     clearRoutes,
+    closeConnectModal,
+    isConnectOpen,
     isNowPlayingOpen,
     isQueueOpen,
     setActiveTab,
@@ -192,6 +208,26 @@ const AppShell: React.FC = () => {
                 Skymusic
               </span>
             </div>
+
+            <button
+              type="button"
+              onClick={() => openConnectModal("devices")}
+              className="relative inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)]"
+              title="Connect, Sync & Cast to TV"
+            >
+              <MonitorSmartphone
+                className={`h-4 w-4 ${
+                  isCloudConnected || lanPeers.length > 0
+                    ? "text-[#1DB954]"
+                    : "text-[var(--text-secondary)]"
+                }`}
+              />
+              <span>
+                {lanPeers.length + cloudDevices.length > 0
+                  ? `${lanPeers.length + cloudDevices.length}`
+                  : "Sync"}
+              </span>
+            </button>
           </header>
 
           {/* Scrollable Page Content */}
@@ -221,6 +257,9 @@ const AppShell: React.FC = () => {
       {/* Full-Screen Animated Now Playing & Lyrics View */}
       <NowPlayingModal />
 
+      {/* Cross-Device Cloud Sync, TV Pairing & Wi-Fi Connect */}
+      <ConnectModal />
+
       {/* In-App Update Notification Dialog */}
       <UpdateModal
         update={availableUpdate}
@@ -234,9 +273,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <PlayerProvider>
-        <NavigationProvider>
-          <AppShell />
-        </NavigationProvider>
+        <SyncProvider>
+          <NavigationProvider>
+            <AppShell />
+          </NavigationProvider>
+        </SyncProvider>
       </PlayerProvider>
     </ThemeProvider>
   );
