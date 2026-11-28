@@ -854,14 +854,27 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const syncCloudNow = useCallback(async () => {
-    if (!cloudUser || !cloudRoomId) {
+    if (!cloudUser) {
       throw new Error("Sign in or pair with a TV code first.");
     }
     setCloudStatus("syncing");
     setCloudError(null);
     try {
+      let targetRoomId = cloudRoomId;
+      if (!targetRoomId) {
+        targetRoomId = await ensureUserSyncRoom(
+          cloudUser,
+          buildSnapshotRef.current()
+        );
+        setCloudRoomId(targetRoomId);
+        localStorage.setItem(CLOUD_ROOM_KEY, targetRoomId);
+        if (cloudUser.email) {
+          setCloudLinkedEmail(cloudUser.email);
+          localStorage.setItem(CLOUD_EMAIL_KEY, cloudUser.email);
+        }
+      }
       const merged = await pushSnapshotToCloudRoom(
-        cloudRoomId,
+        targetRoomId,
         cloudUser,
         buildSnapshotRef.current(),
         downloadedById
@@ -1094,11 +1107,27 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({
     setRemoteContinueListening(null);
   }, [remoteContinueListening]);
 
-  const openConnectModal = useCallback((tab: ConnectTab = "devices") => {
-    setConnectTab(tab);
-    setIsConnectOpen(true);
-    refreshLanDiscovery().catch(() => {});
-  }, []);
+  const openConnectModal = useCallback(
+    (tab: ConnectTab = "devices") => {
+      setConnectTab(tab);
+      setIsConnectOpen(true);
+      refreshLanDiscovery().catch(() => {});
+      if (cloudUser && !cloudUser.isAnonymous && !cloudRoomId) {
+        ensureUserSyncRoom(cloudUser, buildSnapshotRef.current())
+          .then((rid) => {
+            setCloudRoomId(rid);
+            localStorage.setItem(CLOUD_ROOM_KEY, rid);
+            setCloudError(null);
+            if (cloudUser.email) {
+              setCloudLinkedEmail(cloudUser.email);
+              localStorage.setItem(CLOUD_EMAIL_KEY, cloudUser.email);
+            }
+          })
+          .catch(() => {});
+      }
+    },
+    [cloudRoomId, cloudUser]
+  );
 
   const closeConnectModal = useCallback(() => {
     setIsConnectOpen(false);

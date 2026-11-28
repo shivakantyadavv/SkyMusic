@@ -727,6 +727,8 @@ export const ConnectModal: React.FC = () => {
                       <p className="text-sm font-bold text-[var(--text-primary)]">
                         {isCloudConnected
                           ? `Synced (${cloudLinkedEmail || "Cloud Room"})`
+                          : cloudUser && !cloudUser.isAnonymous
+                          ? `Signed in (${cloudUser.email || "Account"}) — Sync Pending`
                           : "Cloud Sync Not Linked"}
                       </p>
                     </div>
@@ -739,6 +741,8 @@ export const ConnectModal: React.FC = () => {
                                 ).toLocaleTimeString()}`
                               : ""
                           }`
+                        : cloudUser && !cloudUser.isAnonymous
+                        ? "Click Sync Now below to finish connecting your cloud library."
                         : "Sign in on Windows/Phone or show a 6-digit Pair Code on TV."}
                     </p>
                     {cloudError && (
@@ -746,7 +750,7 @@ export const ConnectModal: React.FC = () => {
                     )}
                   </div>
 
-                  {isCloudConnected && (
+                  {(isCloudConnected || (cloudUser && !cloudUser.isAnonymous)) && (
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -759,7 +763,7 @@ export const ConnectModal: React.FC = () => {
                             cloudStatus === "syncing" ? "animate-spin" : ""
                           }`}
                         />
-                        Sync Now
+                        {isCloudConnected ? "Sync Now" : "Retry Sync"}
                       </button>
                       <button
                         type="button"
@@ -767,7 +771,7 @@ export const ConnectModal: React.FC = () => {
                         className="inline-flex items-center gap-1 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-red-400"
                       >
                         <LogOut className="h-3.5 w-3.5" />
-                        Unlink
+                        Sign Out
                       </button>
                     </div>
                   )}
