@@ -2,6 +2,14 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.4] - 2026-11-28
+
+### What's New
+- Real-Time Cloud Sync (Firebase Auth & Firestore) for Liked Songs, Playlists, Recently Played, Theme & Dolby Atmos across Windows, Android & TV
+- 6-Digit TV Pair Code + QR Linking without remote password typing
+- Offline Wi-Fi Direct LAN Discovery & Sync
+- Spotify Connect-style Cast / Play on TV & Handoff controls
+
 ## [v1.3] - 2026-11-27
 
 ### What's New

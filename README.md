@@ -3,12 +3,12 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.3-0EA5E9?style=flat-square) — Released on **2026-11-27**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.4-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- India & Pakistan Top Charts (Top 100 India, Hot Hits Pakistan, Bollywood, Coke Studio & Sufi, Punjabi, 90s Classics) with dynamic Daily Mix rotation
-- Spotify-style Playlist numbered song tables & Album detail pages
-- Verified Artist Profiles (Arijit Singh, Vishal Mishra, Sonu Nigam, Atif Aslam, Diljit Dosanjh & more)
-- Full Android TV / Google TV support with Leanback banner, D-Pad navigation, Voice Search, Media Keys & Foreground MediaSession
+- Real-Time Cloud Sync (Firebase Auth & Firestore) for Liked Songs, Playlists, Recently Played, Theme & Dolby Atmos across Windows, Android & TV
+- 6-Digit TV Pair Code + QR Linking without remote password typing
+- Offline Wi-Fi Direct LAN Discovery & Sync
+- Spotify Connect-style Cast / Play on TV & Handoff controls
 <!-- LATEST_VERSION_END -->
 
 ---
