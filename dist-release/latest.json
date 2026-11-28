@@ -1,11 +1,11 @@
 {
-  "version": "2.6.0",
-  "notes": "feat: Home HD album blur backdrop with Dark Glassmorphism, Waveform Seekbar on PlayerBar, and 6-mode Beat FX (Sparks, Rain, Fireflies, Cloudy, Water Droplets, Off)",
-  "pub_date": "2026-11-28T10:34:28.141Z",
+  "version": "2.7.0",
+  "notes": "fix: remove double dark overlay so Home HD album blur, Dark Glassmorphism, Beat FX, and mobile/desktop Waveform Seekbar show clearly",
+  "pub_date": "2026-11-28T11:53:43.841Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTViRk5GVXB5NDFQZmhoQkNaS21aMEMrZXp0a2VyeW5WaEpGK2NYZzY2aE9GUlJtODMvenhLRm1PRVU2aXpYVStZZXkvdWs0ekw3WHJ6djF0dWk4TUE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODYxNjIyCWZpbGU6U2t5bXVzaWNfMi42LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuNi4wCmhqNU5QL1h4SGUxd281dXR4ZWhHYW9WWEhFTEhYV3Z4RjZsWDBkekRSakVMMlhtYVhVRk1FWkpvc2pnQit5d3dZcno4dG9pWlhyM3ltdEp5S3NqQ0NRPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.6/skymusic_v2.6_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXhqZUF2RDBKNXdMcEc2bkhxendXWEJNWDErY2tGeUNpUElMbXdmbHM5TExlbmV1dTJsWmtiSkxaODU5TTUrV0greFlsYWJNc1VNcU9hRnpHYUdFb0E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODY2Mzc4CWZpbGU6U2t5bXVzaWNfMi43LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuNy4wCjdSTTlvd294VzFHckRhVXZLdFMwR3h4cndvbDI1aVRvUEVidlp0c2NxZU8rLzB3UWp3Sk1XcHVaSkE2aTJPTHAyK3lITVAvcUFKMjJGNnBlSjRPRkJ3PT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.7/skymusic_v2.7_x64-setup.exe"
     }
   }
 }

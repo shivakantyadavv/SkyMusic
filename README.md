@@ -3,9 +3,9 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v2.6-0EA5E9?style=flat-square) — Released on **2026-11-28**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v2.7-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- feat: Home HD album blur backdrop with Dark Glassmorphism, Waveform Seekbar on PlayerBar, and 6-mode Beat FX (Sparks, Rain, Fireflies, Cloudy, Water Droplets, Off)
+- fix: remove double dark overlay so Home HD album blur, Dark Glassmorphism, Beat FX, and mobile/desktop Waveform Seekbar show clearly
 <!-- LATEST_VERSION_END -->
 
 ---

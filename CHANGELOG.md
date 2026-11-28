@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.7] - 2026-11-28
+
+### What's New
+- fix: remove double dark overlay so Home HD album blur, Dark Glassmorphism, Beat FX, and mobile/desktop Waveform Seekbar show clearly
+
 ## [v2.6] - 2026-11-28
 
 ### What's New
