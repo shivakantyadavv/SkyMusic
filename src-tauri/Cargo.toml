@@ -1,6 +1,6 @@
 [package]
 name = "skymusic"
-version = "1.4.0"
+version = "1.5.0"
 description = "Skymusic - Cross-platform music player"
 authors = ["Skymusic"]
 edition = "2021"

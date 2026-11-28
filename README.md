@@ -3,12 +3,10 @@
 A sleek, cross-platform multi-theme music player built with **Tauri v2**, **React**, **TypeScript**, **Tailwind CSS**, and **Vite** — running natively on **Windows 11** and **Android** from a single codebase.
 
 <!-- LATEST_VERSION_START -->
-> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.4-0EA5E9?style=flat-square) — Released on **2026-11-28**
+> **Latest Release:** ![Version](https://img.shields.io/badge/version-v1.5-0EA5E9?style=flat-square) — Released on **2026-11-28**
 
-- Real-Time Cloud Sync (Firebase Auth & Firestore) for Liked Songs, Playlists, Recently Played, Theme & Dolby Atmos across Windows, Android & TV
-- 6-Digit TV Pair Code + QR Linking without remote password typing
-- Offline Wi-Fi Direct LAN Discovery & Sync
-- Spotify Connect-style Cast / Play on TV & Handoff controls
+- Fix Cloud Firestore Sync permission rules for track metadata & initial room creation
+- add Retry Sync and Sign Out controls in Connect dialog
 <!-- LATEST_VERSION_END -->
 
 ---

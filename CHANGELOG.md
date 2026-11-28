@@ -2,6 +2,12 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v1.5] - 2026-11-28
+
+### What's New
+- Fix Cloud Firestore Sync permission rules for track metadata & initial room creation
+- add Retry Sync and Sign Out controls in Connect dialog
+
 ## [v1.4] - 2026-11-28
 
 ### What's New

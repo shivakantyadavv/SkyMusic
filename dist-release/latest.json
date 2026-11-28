@@ -1,11 +1,11 @@
 {
-  "version": "1.4.0",
-  "notes": "Real-Time Cloud Sync (Firebase Auth & Firestore) for Liked Songs, Playlists, Recently Played, Theme & Dolby Atmos across Windows, Android & TV; 6-Digit TV Pair Code + QR Linking without remote password typing; Offline Wi-Fi Direct LAN Discovery & Sync; Spotify Connect-style Cast / Play on TV & Handoff controls",
-  "pub_date": "2026-11-28T05:13:04.739Z",
+  "version": "1.5.0",
+  "notes": "Fix Cloud Firestore Sync permission rules for track metadata & initial room creation; add Retry Sync and Sign Out controls in Connect dialog",
+  "pub_date": "2026-11-28T05:50:01.491Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTRHSXlDRkg0cGhFTVdQRElxVW5iNlRMY0JEeWJzMWZKbzZkMVRrMVJ2Nk5XSmFHRjk0TW5UNDdYZDFOTFdxRHlKMkxuZ090aTFrNUxuNEdXUkFGV1E4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQyMDkxCWZpbGU6U2t5bXVzaWNfMS40LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNC4wClQ3UWdZM0owS2NlOW5TM0hVOXdLeG9ucFZINlBCY3ZnQzNmTVFXZGlpTXhnS2VqTFVMTmtXaDlFam5mK3JaVXMxTlNYSUEybVI2NDB1dVl6MXljYUNRPT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.4/skymusic_v1.4_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUTRwNzh1akpTbkRuK0psdFJIZVdER2s0aFJnOHFobEdqWXN2dlBpQXZabld6WmEvcjhPZWc2T3Y4dzVscGxGQi94UThMdmlFejRIMTdFZngyd1UxNEEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODQ0Njg2CWZpbGU6U2t5bXVzaWNfMS41LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuNS4wCjVLaDdlakppblprbzNCajJEMVlrT2RodGZxNUpzODZqcDhTOXdvRlB5bU5scm82QUhBU0tDcUdnR3d5bGJEVE1ESzNCUGo0VnJVcFAxakNzNzBLSURBPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v1.5/skymusic_v1.5_x64-setup.exe"
     }
   }
 }
