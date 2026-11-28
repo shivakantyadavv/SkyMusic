@@ -1,11 +1,11 @@
 {
-  "version": "2.7.0",
-  "notes": "fix: remove double dark overlay so Home HD album blur, Dark Glassmorphism, Beat FX, and mobile/desktop Waveform Seekbar show clearly",
-  "pub_date": "2026-11-28T11:53:43.841Z",
+  "version": "2.8.0",
+  "notes": "chore: update Skymusic app logo across Windows Desktop, Android/TV APK, and in-app UI",
+  "pub_date": "2026-11-28T13:04:37.801Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUXhqZUF2RDBKNXdMcEc2bkhxendXWEJNWDErY2tGeUNpUElMbXdmbHM5TExlbmV1dTJsWmtiSkxaODU5TTUrV0greFlsYWJNc1VNcU9hRnpHYUdFb0E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODY2Mzc4CWZpbGU6U2t5bXVzaWNfMi43LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuNy4wCjdSTTlvd294VzFHckRhVXZLdFMwR3h4cndvbDI1aVRvUEVidlp0c2NxZU8rLzB3UWp3Sk1XcHVaSkE2aTJPTHAyK3lITVAvcUFKMjJGNnBlSjRPRkJ3PT0K",
-      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.7/skymusic_v2.7_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRM3RydVNLSXRrUSt6K21Gb3V3M0F2aTArSlRZejRyWFNiQ2lKa2o4MVUyL3hjbzVXYkhBWXpCeVBzWXZ6UGcrVGhGQUdqT0M0S2xHYmZwY0JHWmNsUU9yTnJ0NHY0MlEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1ODcwNTA5CWZpbGU6U2t5bXVzaWNfMi44LjBfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjIuOC4wCnZGTDQ0ekFZS0pSalJUb3I0WmE2cmMvNEFQcS9Dalhyd1VZSWxIR1hHT3lUOGg2azgxZU9RaDlwN0duclFSaGpFRWN3YmVIVnV2Z05qZkNhYWJtMURRPT0K",
+      "url": "https://github.com/shivakantyadavv/skymusic/releases/download/v2.8/skymusic_v2.8_x64-setup.exe"
     }
   }
 }

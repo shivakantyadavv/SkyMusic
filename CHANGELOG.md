@@ -2,6 +2,11 @@
 
 All notable changes to **Skymusic** are documented in this file.
 
+## [v2.8] - 2026-11-28
+
+### What's New
+- chore: update Skymusic app logo across Windows Desktop, Android/TV APK, and in-app UI
+
 ## [v2.7] - 2026-11-28
 
 ### What's New

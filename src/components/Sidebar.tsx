@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Disc3,
   FolderOpen,
   Home,
   Library,
@@ -58,9 +57,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
       {/* Brand Header */}
       <div className={`sky-card rounded-xl ${tvMode ? "p-3" : "p-4"}`}>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#1DB954] shadow-lg shadow-[#0EA5E9]/20">
-            <Disc3 className="h-5 w-5 text-white" />
-          </div>
+          <img
+            src="/skymusic-logo.png"
+            alt="Skymusic"
+            className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-lg shadow-[#0EA5E9]/20"
+          />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <h1

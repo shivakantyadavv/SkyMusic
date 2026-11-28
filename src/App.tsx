@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Disc3, MonitorSmartphone } from "lucide-react";
+import { MonitorSmartphone } from "lucide-react";
 import { BeatFxButton } from "./components/BeatFxButton";
 import { BeatVisualizerCanvas } from "./components/BeatVisualizerCanvas";
 import { ConnectModal } from "./components/ConnectModal";
@@ -216,9 +216,11 @@ const AppShell: React.FC = () => {
             style={{ borderColor: "var(--border-subtle)" }}
           >
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#1DB954]">
-                <Disc3 className="h-4 w-4 text-white" />
-              </div>
+              <img
+                src="/skymusic-logo.png"
+                alt="Skymusic"
+                className="h-7 w-7 shrink-0 rounded-lg object-cover shadow-md"
+              />
               <span
                 className="text-base font-bold tracking-tight"
                 style={{ color: "var(--text-primary)" }}
